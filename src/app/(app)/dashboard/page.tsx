@@ -12,6 +12,7 @@ import {
   LayoutGrid,
   Plus,
   Sparkles,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -34,12 +35,23 @@ export default async function DashboardPage() {
             Studio<span className="text-zinc-500">.ai</span>
           </span>
         </Link>
-        <Link href="/generate">
-          <Button className="rounded-full bg-white text-black hover:bg-zinc-200">
-            <Plus className="mr-2 h-4 w-4" />
-            Create New
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/account">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full border border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800 hover:text-white transition-all"
+            >
+              <User className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link href="/generate">
+            <Button className="rounded-full bg-white text-black hover:bg-zinc-200">
+              <Plus className="mr-2 h-4 w-4" />
+              Create New
+            </Button>
+          </Link>
+        </div>
       </nav>
 
       <main className="relative z-10 mx-auto max-w-7xl px-6 py-12">

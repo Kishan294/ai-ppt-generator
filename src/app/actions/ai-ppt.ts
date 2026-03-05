@@ -42,11 +42,11 @@ export async function generatePPTContent(
   slideCount: number = 5,
 ): Promise<PPTData> {
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set in environment variables");
+    throw new Error("API configuration is missing.");
   }
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.1-flash-lite-preview",
   });
 
   const prompt = `
@@ -77,7 +77,7 @@ export async function generatePPTFromContent(
   content: string,
 ): Promise<PPTData> {
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set in environment variables");
+    throw new Error("API configuration is missing.");
   }
 
   const model = genAI.getGenerativeModel({

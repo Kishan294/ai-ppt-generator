@@ -69,7 +69,7 @@ export default async function LandingPage() {
           <div className="space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-4 py-1.5 text-xs font-medium text-zinc-400 backdrop-blur">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Powered by Gemini AI
+              Advanced Generative AI
             </span>
             <h1 className="mx-auto max-w-4xl text-5xl font-bold leading-[1.08] tracking-tight sm:text-7xl lg:text-8xl">
               Create stunning
@@ -189,7 +189,7 @@ export default async function LandingPage() {
                 icon: Wand2,
                 title: "AI-Powered Generation",
                 description:
-                  "Just type a topic and our Gemini-powered AI creates a fully structured presentation with professional content.",
+                  "Just type a topic and our AI creates a fully structured presentation with professional content.",
                 gradient: "from-indigo-500/20 to-purple-500/20",
                 iconColor: "text-indigo-400",
               },

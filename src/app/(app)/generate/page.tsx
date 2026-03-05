@@ -1,11 +1,17 @@
 "use client";
 
+import {
+  generatePPTContent,
+  generatePPTFromContent,
+  type PPTData,
+} from "@/app/actions/ai-ppt";
+import { savePresentation } from "@/app/actions/presentation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
 import { downloadPPT } from "@/lib/ppt-generator";
 import { themes, type Theme } from "@/lib/themes";
 import { cn } from "@/lib/utils";
-import { authClient } from "@/lib/auth-client";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Check,
@@ -18,16 +24,10 @@ import {
   User,
   Wand2,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import {
-  generatePPTContent,
-  generatePPTFromContent,
-  type PPTData,
-} from "@/app/actions/ai-ppt";
-import { savePresentation } from "@/app/actions/presentation";
-import Link from "next/link";
 
 /* ─── helpers ─── */
 const getGradStyle = (t: Theme): React.CSSProperties =>
@@ -162,10 +162,12 @@ export default function GeneratePage() {
               My Presentations
             </Button>
           </Link>
-          <div className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-400 backdrop-blur">
-            <User className="h-3.5 w-3.5" />
-            <span>Account</span>
-          </div>
+          <Link href="/account">
+            <div className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-400 backdrop-blur hover:border-zinc-700 hover:text-white transition-all">
+              <User className="h-3.5 w-3.5" />
+              <span>Account</span>
+            </div>
+          </Link>
           <Button
             variant="ghost"
             size="sm"
@@ -194,7 +196,7 @@ export default function GeneratePage() {
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-4 py-1 text-xs font-medium text-zinc-400 backdrop-blur">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Powered by Gemini
+              Advanced AI Generation
             </span>
             <h1 className="mx-auto max-w-3xl text-5xl font-bold leading-[1.08] tracking-tight sm:text-7xl">
               Create stunning
@@ -256,27 +258,34 @@ export default function GeneratePage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.2 }}
-                    className="relative flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-2 pl-5 backdrop-blur-2xl"
                   >
-                    <Wand2 className="h-5 w-5 shrink-0 text-zinc-500" />
-                    <Input
-                      value={topic}
-                      onChange={(e) => setTopic(e.target.value)}
-                      disabled={generating}
-                      placeholder="Describe your presentation topic…"
-                      className="h-12 border-none bg-transparent text-base placeholder:text-zinc-600 focus-visible:ring-0"
-                    />
-                    <Button
-                      type="submit"
-                      disabled={generating || !topic.trim()}
-                      className="h-11 shrink-0 rounded-xl bg-white px-6 font-semibold text-black hover:bg-zinc-200"
-                    >
-                      {generating ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        "Generate"
-                      )}
-                    </Button>
+                    <div className="relative flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-2 pl-5 backdrop-blur-2xl">
+                      <Wand2 className="h-5 w-5 shrink-0 text-zinc-500" />
+                      <Input
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
+                        disabled={generating}
+                        placeholder="Describe your presentation topic…"
+                        className="h-12 border-none bg-transparent text-base placeholder:text-zinc-600 focus-visible:ring-0"
+                      />
+                      <Button
+                        type="submit"
+                        disabled={generating || !topic.trim()}
+                        className="h-11 shrink-0 rounded-xl bg-white px-6 font-semibold text-black hover:bg-zinc-200"
+                      >
+                        {generating ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "Generate"
+                        )}
+                      </Button>
+                    </div>
+                    {/* <div className="mt-2 flex items-center gap-2 px-6 text-[10px] text-zinc-600">
+                      <Zap className="h-3 w-3 text-amber-500/50" />
+                      <span>
+                        Estimated: {Math.ceil(topic.length / 4) + 600} tokens
+                      </span>
+                    </div> */}
                   </motion.div>
                 ) : (
                   <motion.div
@@ -307,17 +316,26 @@ export default function GeneratePage() {
                           ? `${pastedContent.split(/\s+/).filter(Boolean).length} words`
                           : "No content pasted yet"}
                       </span>
-                      <Button
-                        type="submit"
-                        disabled={generating || !pastedContent.trim()}
-                        className="h-10 shrink-0 rounded-xl bg-white px-6 font-semibold text-black hover:bg-zinc-200"
-                      >
-                        {generating ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          "Generate from Content"
-                        )}
-                      </Button>
+                      <div className="flex items-center gap-4">
+                        {/* <div className="flex items-center gap-2 text-[10px] text-zinc-600">
+                          <Zap className="h-3 w-3 text-amber-500/50" />
+                          <span>
+                            Est. {Math.ceil(pastedContent.length / 4) + 600}{" "}
+                            tokens
+                          </span>
+                        </div> */}
+                        <Button
+                          type="submit"
+                          disabled={generating || !pastedContent.trim()}
+                          className="h-10 shrink-0 rounded-xl bg-white px-6 font-semibold text-black hover:bg-zinc-200"
+                        >
+                          {generating ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Generate from Content"
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </motion.div>
                 )}
