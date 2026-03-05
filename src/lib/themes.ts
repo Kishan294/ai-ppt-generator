@@ -1,0 +1,146 @@
+export interface Theme {
+  id: string;
+  name: string;
+  tag: string;
+  background: string;
+  titleColor: string;
+  contentColor: string;
+  accentColor: string;
+  secondaryAccent: string;
+  fontPair: { heading: string; body: string };
+  layoutType: "clean" | "bold" | "split" | "editorial" | "tech";
+  gradient?: {
+    from: string;
+    to: string;
+    mid?: string;
+    angle: number;
+  };
+}
+
+export const themes: Theme[] = [
+  {
+    id: "obsidian",
+    name: "Obsidian",
+    tag: "Dark · Luxury",
+    background: "09090B",
+    titleColor: "FAFAFA",
+    contentColor: "A1A1AA",
+    accentColor: "D4A574",
+    secondaryAccent: "1C1917",
+    fontPair: { heading: "Playfair Display", body: "Inter" },
+    layoutType: "bold",
+    gradient: { from: "09090B", to: "1C1917", angle: 135 },
+  },
+  {
+    id: "glacier",
+    name: "Glacier",
+    tag: "Light · Minimal",
+    background: "FAFBFC",
+    titleColor: "0F172A",
+    contentColor: "475569",
+    accentColor: "0EA5E9",
+    secondaryAccent: "F0F9FF",
+    fontPair: { heading: "DM Sans", body: "DM Sans" },
+    layoutType: "clean",
+  },
+  {
+    id: "pitch",
+    name: "Pitch Deck",
+    tag: "Startup · VC",
+    background: "FFFFFF",
+    titleColor: "111827",
+    contentColor: "4B5563",
+    accentColor: "6366F1",
+    secondaryAccent: "EEF2FF",
+    fontPair: { heading: "Inter", body: "Inter" },
+    layoutType: "split",
+  },
+  {
+    id: "cosmos",
+    name: "Cosmos",
+    tag: "Dark · Electric",
+    background: "020617",
+    titleColor: "F8FAFC",
+    contentColor: "94A3B8",
+    accentColor: "22D3EE",
+    secondaryAccent: "0F172A",
+    fontPair: { heading: "Space Grotesk", body: "Inter" },
+    layoutType: "bold",
+    gradient: { from: "020617", to: "1E1B4B", mid: "0F172A", angle: 160 },
+  },
+  {
+    id: "sand",
+    name: "Sand",
+    tag: "Warm · Editorial",
+    background: "FFFBEB",
+    titleColor: "1C1917",
+    contentColor: "57534E",
+    accentColor: "D97706",
+    secondaryAccent: "FEF3C7",
+    fontPair: { heading: "Playfair Display", body: "Source Serif Pro" },
+    layoutType: "editorial",
+  },
+  {
+    id: "neon",
+    name: "Neon",
+    tag: "Dark · Vibrant",
+    background: "09090B",
+    titleColor: "E9D5FF",
+    contentColor: "A1A1AA",
+    accentColor: "A855F7",
+    secondaryAccent: "18181B",
+    fontPair: { heading: "Space Grotesk", body: "Inter" },
+    layoutType: "tech",
+    gradient: { from: "09090B", to: "3B0764", angle: 145 },
+  },
+  {
+    id: "sage",
+    name: "Sage",
+    tag: "Organic · Calm",
+    background: "F7F7F2",
+    titleColor: "1A2E05",
+    contentColor: "3F6212",
+    accentColor: "65A30D",
+    secondaryAccent: "ECFCCB",
+    fontPair: { heading: "DM Serif Display", body: "DM Sans" },
+    layoutType: "split",
+  },
+  {
+    id: "ocean",
+    name: "Ocean",
+    tag: "Dark · Professional",
+    background: "0C1222",
+    titleColor: "E0F2FE",
+    contentColor: "7DD3FC",
+    accentColor: "38BDF8",
+    secondaryAccent: "172554",
+    fontPair: { heading: "Outfit", body: "Inter" },
+    layoutType: "bold",
+    gradient: { from: "0C1222", to: "1E3A5F", angle: 180 },
+  },
+  {
+    id: "rose",
+    name: "Rosé",
+    tag: "Soft · Elegant",
+    background: "FFF5F7",
+    titleColor: "4C0519",
+    contentColor: "881337",
+    accentColor: "E11D48",
+    secondaryAccent: "FFE4E6",
+    fontPair: { heading: "Playfair Display", body: "Lato" },
+    layoutType: "editorial",
+  },
+  {
+    id: "carbon",
+    name: "Carbon",
+    tag: "Tech · Precision",
+    background: "18181B",
+    titleColor: "FAFAFA",
+    contentColor: "D4D4D8",
+    accentColor: "22C55E",
+    secondaryAccent: "27272A",
+    fontPair: { heading: "JetBrains Mono", body: "Inter" },
+    layoutType: "tech",
+    gradient: { from: "18181B", to: "09090B", angle: 180 },
+  },
+];
