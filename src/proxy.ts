@@ -1,3 +1,4 @@
+import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 const protectedRoutes = ["/generate"];
@@ -6,9 +7,10 @@ const authRoutes = ["/sign-in", "/sign-up"];
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Better Auth stores session in this cookie
-  const sessionCookie = request.cookies.get("better-auth.session_token");
-  const isAuthenticated = !!sessionCookie;
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  });
+  const isAuthenticated = !!session;
 
   // Protected routes — redirect to sign-in if not authenticated
   if (protectedRoutes.some((route) => pathname.startsWith(route))) {

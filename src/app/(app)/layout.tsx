@@ -1,17 +1,17 @@
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Lightweight check: verify session cookie exists as a fallback guard
-  // The proxy.ts handles the primary redirect logic
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("better-auth.session_token");
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  if (!sessionToken) {
+  if (!session) {
     redirect("/sign-in");
   }
 

@@ -8,11 +8,14 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 
 export default async function LandingPage() {
-  const cookieStore = await cookies();
-  const isAuthenticated = !!cookieStore.get("better-auth.session_token");
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  const isAuthenticated = !!session;
 
   return (
     <div className="min-h-screen bg-[#07070A] text-zinc-100 font-sans antialiased relative">
