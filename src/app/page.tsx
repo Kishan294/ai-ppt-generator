@@ -6,10 +6,22 @@ import { downloadPPT } from "@/lib/ppt-generator";
 import { themes, type Theme } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Download, Loader2, Sparkles, Wand2 } from "lucide-react";
+import {
+  Check,
+  ClipboardPaste,
+  Download,
+  Lightbulb,
+  Loader2,
+  Sparkles,
+  Wand2,
+} from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { generatePPTContent, type PPTData } from "./actions/ai-ppt";
+import {
+  generatePPTContent,
+  generatePPTFromContent,
+  type PPTData,
+} from "./actions/ai-ppt";
 
 /* ─── helpers ─── */
 const getGradStyle = (t: Theme): React.CSSProperties =>
@@ -35,6 +47,8 @@ const fadeUp = {
 
 export default function Home() {
   const [topic, setTopic] = useState("");
+  const [pastedContent, setPastedContent] = useState("");
+  const [mode, setMode] = useState<"topic" | "content">("topic");
   const [generating, setGenerating] = useState(false);
   const [pptData, setPptData] = useState<PPTData | null>(null);
   const [theme, setTheme] = useState<Theme>(themes[0]);
@@ -43,10 +57,16 @@ export default function Home() {
   /* ── generate ── */
   const generate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!topic.trim()) return toast.error("Enter a topic first");
+    if (mode === "topic" && !topic.trim())
+      return toast.error("Enter a topic first");
+    if (mode === "content" && !pastedContent.trim())
+      return toast.error("Paste your content first");
     setGenerating(true);
     try {
-      const data = await generatePPTContent(topic);
+      const data =
+        mode === "topic"
+          ? await generatePPTContent(topic)
+          : await generatePPTFromContent(pastedContent);
       setPptData(data);
       toast.success("Deck generated!");
       setTimeout(
@@ -118,41 +138,123 @@ export default function Home() {
               in seconds
             </h1>
             <p className="mx-auto max-w-xl text-lg text-zinc-400">
-              Type a topic, pick a visual style, and let AI craft a professional
-              deck for you — ready to download as .pptx.
+              Type a topic or paste your content — AI will craft a professional
+              deck for you, ready to download as .pptx.
             </p>
           </motion.div>
 
-          {/* ── prompt bar ── */}
+          {/* ── mode tabs + input ── */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="mx-auto mt-10 max-w-2xl"
+            className="mx-auto mt-10 max-w-2xl space-y-4"
           >
+            {/* Mode Toggle */}
+            <div className="flex items-center justify-center gap-1 rounded-full border border-zinc-800 bg-zinc-900/60 p-1 w-fit mx-auto backdrop-blur">
+              <button
+                onClick={() => setMode("topic")}
+                className={cn(
+                  "flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-all",
+                  mode === "topic"
+                    ? "bg-white text-black shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-200",
+                )}
+              >
+                <Lightbulb className="h-3.5 w-3.5" />
+                Topic
+              </button>
+              <button
+                onClick={() => setMode("content")}
+                className={cn(
+                  "flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-all",
+                  mode === "content"
+                    ? "bg-white text-black shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-200",
+                )}
+              >
+                <ClipboardPaste className="h-3.5 w-3.5" />
+                Paste Content
+              </button>
+            </div>
+
             <form onSubmit={generate} className="group relative">
               <div className="absolute -inset-px rounded-2xl bg-linear-to-r from-indigo-500/40 via-cyan-500/40 to-emerald-500/40 opacity-0 blur-sm transition-opacity duration-700 group-focus-within:opacity-100" />
-              <div className="relative flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-2 pl-5 backdrop-blur-2xl">
-                <Wand2 className="h-5 w-5 shrink-0 text-zinc-500" />
-                <Input
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  disabled={generating}
-                  placeholder="Describe your presentation topic…"
-                  className="h-12 border-none bg-transparent text-base placeholder:text-zinc-600 focus-visible:ring-0"
-                />
-                <Button
-                  type="submit"
-                  disabled={generating || !topic.trim()}
-                  className="h-11 shrink-0 rounded-xl bg-white px-6 font-semibold text-black hover:bg-zinc-200"
-                >
-                  {generating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Generate"
-                  )}
-                </Button>
-              </div>
+
+              <AnimatePresence mode="wait">
+                {mode === "topic" ? (
+                  <motion.div
+                    key="topic"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2 }}
+                    className="relative flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-2 pl-5 backdrop-blur-2xl"
+                  >
+                    <Wand2 className="h-5 w-5 shrink-0 text-zinc-500" />
+                    <Input
+                      value={topic}
+                      onChange={(e) => setTopic(e.target.value)}
+                      disabled={generating}
+                      placeholder="Describe your presentation topic…"
+                      className="h-12 border-none bg-transparent text-base placeholder:text-zinc-600 focus-visible:ring-0"
+                    />
+                    <Button
+                      type="submit"
+                      disabled={generating || !topic.trim()}
+                      className="h-11 shrink-0 rounded-xl bg-white px-6 font-semibold text-black hover:bg-zinc-200"
+                    >
+                      {generating ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Generate"
+                      )}
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="content"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2 }}
+                    className="relative flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 backdrop-blur-2xl"
+                  >
+                    <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
+                      <ClipboardPaste className="h-3.5 w-3.5" />
+                      Paste your article, notes, or any text below
+                    </div>
+                    <textarea
+                      value={pastedContent}
+                      onChange={(e) => setPastedContent(e.target.value)}
+                      disabled={generating}
+                      placeholder={
+                        "Paste your content here…\n\nFor example: meeting notes, blog post, research paper, article, course outline, or any raw text. AI will analyze it and create a structured presentation."
+                      }
+                      rows={7}
+                      className="w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-sm leading-relaxed text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-700 focus:outline-none focus:ring-0"
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-zinc-600">
+                        {pastedContent.length > 0
+                          ? `${pastedContent.split(/\s+/).filter(Boolean).length} words`
+                          : "No content pasted yet"}
+                      </span>
+                      <Button
+                        type="submit"
+                        disabled={generating || !pastedContent.trim()}
+                        className="h-10 shrink-0 rounded-xl bg-white px-6 font-semibold text-black hover:bg-zinc-200"
+                      >
+                        {generating ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "Generate from Content"
+                        )}
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </form>
           </motion.div>
         </section>
