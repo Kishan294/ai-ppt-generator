@@ -27,11 +27,25 @@ const JSON_SCHEMA = `
 }`;
 
 function parseResponse(text: string): PPTData {
-  const cleanText = text
-    .replace(/```json/g, "")
-    .replace(/```/g, "")
-    .trim();
-  return JSON.parse(cleanText) as PPTData;
+  // Try to find JSON block in case response includes text around it
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const cleanText = jsonMatch ? jsonMatch[0] : text;
+
+  try {
+    const data = JSON.parse(cleanText) as PPTData;
+    if (!data.title || !Array.isArray(data.slides)) {
+      throw new Error("INVALID_DATA_STRUCTURE");
+    }
+    return data;
+  } catch {
+    console.error(
+      "AI JSON Parse Failure. Raw length:",
+      text.length,
+      "Preview:",
+      text.substring(0, 100),
+    );
+    throw new Error("AI_FORMAT_ERROR");
+  }
 }
 
 /**
@@ -45,27 +59,43 @@ export async function generatePPTContent(
     throw new Error("API configuration is missing.");
   }
 
+  // Use Gemini 2.0 Flash for superior performance and reliable JSON output
   const model = genAI.getGenerativeModel({
-    model: "gemini-3.1-flash-lite-preview",
+    model: "gemini-3-flash-preview",
   });
 
   const prompt = `
-    Generate a presentation structure for the topic: "${topic}".
-    The presentation should have approximately ${slideCount} slides.
-    Format the output as a valid JSON object with the following structure:
+    Task: Generate a presentation structure.
+    Topic: "${topic}"
+    Target Slide Count: ${slideCount}
+    
+    Requirements:
+    - Professional, informative, and engaging content.
+    - Title should be compelling.
+    - Each slide must have a title and a list of 3-5 bullet points.
+    
+    Output Format (JSON):
     ${JSON_SCHEMA}
-    Ensure the content is professional, concise, and informative.
-    Return ONLY the raw JSON string.
   `;
 
   try {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return parseResponse(response.text());
-  } catch (error) {
-    console.error("Error generating AI content:", error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("generatePPTContent error:", errorMessage);
+
+    if (errorMessage.includes("429") || errorMessage.includes("quota")) {
+      throw new Error("AI_QUOTA_REACHED");
+    }
+
+    if (errorMessage === "AI_FORMAT_ERROR") {
+      throw new Error("AI_FORMAT_ERROR");
+    }
+
     throw new Error(
-      "Failed to generate presentation content. Please try again.",
+      "Failed to generate presentation content. The AI encountered an error.",
     );
   }
 }
@@ -81,38 +111,47 @@ export async function generatePPTFromContent(
   }
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.0-flash",
+    generationConfig: { responseMimeType: "application/json" },
   });
 
   const prompt = `
-    You are a professional presentation designer. The user has provided the following raw content.
-    Your job is to analyze it and create a well-structured, professional presentation from it.
-
-    RULES:
-    - Extract the key themes, arguments, and data points from the content.
-    - Create a clear narrative arc: introduction, key sections, and conclusion.
-    - Each slide should have a concise title and 3-6 bullet points.
-    - Bullet points should be clear, concise sentences (not paragraphs).
-    - Generate between 4-8 slides depending on content length.
-    - Give the presentation a professional, compelling title.
-    - DO NOT add information that isn't in or implied by the original content.
-
-    USER CONTENT:
+    Task: Create a professional presentation from the provided content.
+    Rules:
+    - Analyze the input and extract key themes.
+    - Structure it with a clear narrative (Intro -> Core Sections -> Conclusion).
+    - Each slide: Concise title + 3-6 clear bullet points.
+    - Generate 4 to 8 slides based on depth of content.
+    
+    User Content:
     """
     ${content}
     """
 
-    Format the output as a valid JSON object with the following structure:
+    Directives:
+    - Use professional tone.
+    - Do not invent facts not present in text.
+    
+    Output JSON Schema:
     ${JSON_SCHEMA}
-    Return ONLY the raw JSON string. No markdown, no explanation.
   `;
 
   try {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return parseResponse(response.text());
-  } catch (error) {
-    console.error("Error generating AI content from paste:", error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("generatePPTFromContent Error:", errorMessage);
+
+    if (errorMessage.includes("429") || errorMessage.includes("quota")) {
+      throw new Error("AI_QUOTA_REACHED");
+    }
+
+    if (errorMessage === "AI_FORMAT_ERROR") {
+      throw new Error("AI_FORMAT_ERROR");
+    }
+
     throw new Error(
       "Failed to structure your content into slides. Please try again.",
     );

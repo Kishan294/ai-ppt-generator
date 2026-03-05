@@ -83,6 +83,7 @@ export default function GeneratePage() {
       return toast.error("Enter a topic first");
     if (mode === "content" && !pastedContent.trim())
       return toast.error("Paste your content first");
+
     setGenerating(true);
     try {
       const data =
@@ -105,9 +106,25 @@ export default function GeneratePage() {
         () => previewRef.current?.scrollIntoView({ behavior: "smooth" }),
         400,
       );
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error("Generation failed — check your API key.");
+      const msg = error instanceof Error ? error.message : String(error);
+
+      if (msg.includes("AI_QUOTA_REACHED")) {
+        toast.error("AI Quota Limit Reached", {
+          description:
+            "Please wait a minute before trying again or upgrade your plan.",
+        });
+      } else if (msg.includes("AI_FORMAT_ERROR")) {
+        toast.error("AI Formatting Error", {
+          description:
+            "The AI struggled to format the content. Trying again usually works!",
+        });
+      } else {
+        toast.error("Generation failed", {
+          description: "Check your connection or API key and try again.",
+        });
+      }
     } finally {
       setGenerating(false);
     }
@@ -122,6 +139,30 @@ export default function GeneratePage() {
     } catch {
       toast.error("Export failed");
     }
+  };
+
+  const EXAMPLES = {
+    topics: [
+      "Future of AI in Medicine",
+      "Space Exploration 2030",
+      "Sustainable Energy Guide",
+      "Modern Web Architecture",
+      "Mental Health in Tech",
+    ],
+    contents: [
+      {
+        label: "Meeting Notes",
+        text: "Product sync for Project Alpha:\n- Launch date confirmed for October 15th, 2026\n- Marketing budget: $50k allocation for Q4 growth\n- Core features: real-time collaboration, offline mode, and E2E encryption\n- Hiring plan: Need 2 senior backend engineers and 1 lead designer\n- Next steps: Finalize API docs and begin internal beta testing.",
+      },
+      {
+        label: "Tech Architecture",
+        text: "Modern Web Stack Overview:\n- Frontend: Next.js 15 with App Router and Server Components\n- Styling: Tailwind CSS for rapid UI development\n- Database: PostgreSQL with Drizzle ORM for type-safety\n- Auth: Better-Auth for seamless session management\n- Deployment: Vercel for edge-ready performance and global scale.",
+      },
+      {
+        label: "Market Analysis",
+        text: "The Evolution of E-commerce:\n- Mobile commerce now accounts for 73% of total online sales\n- AR/VR integration is increasing conversion rates by 40%\n- Personalized shopping experiences are no longer optional but expected\n- Blockchain technology is being explored for supply chain transparency\n- Sustainability is a primary driver for Gen Z purchasing decisions.",
+      },
+    ],
   };
 
   return (
@@ -280,12 +321,22 @@ export default function GeneratePage() {
                         )}
                       </Button>
                     </div>
-                    {/* <div className="mt-2 flex items-center gap-2 px-6 text-[10px] text-zinc-600">
-                      <Zap className="h-3 w-3 text-amber-500/50" />
-                      <span>
-                        Estimated: {Math.ceil(topic.length / 4) + 600} tokens
+
+                    <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                      <span className="text-[10px] uppercase tracking-wider text-zinc-600 font-bold">
+                        Try:
                       </span>
-                    </div> */}
+                      {EXAMPLES.topics.map((ex) => (
+                        <button
+                          key={ex}
+                          type="button"
+                          onClick={() => setTopic(ex)}
+                          className="rounded-full border border-zinc-800/50 bg-zinc-900/30 px-3 py-1 text-[11px] text-zinc-500 transition-colors hover:border-zinc-700 hover:text-zinc-300"
+                        >
+                          {ex}
+                        </button>
+                      ))}
+                    </div>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -296,9 +347,26 @@ export default function GeneratePage() {
                     transition={{ duration: 0.2 }}
                     className="relative flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 backdrop-blur-2xl"
                   >
-                    <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
-                      <ClipboardPaste className="h-3.5 w-3.5" />
-                      Paste your article, notes, or any text below
+                    <div className="flex flex-col gap-4 px-1 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
+                        <ClipboardPaste className="h-3.5 w-3.5" />
+                        Paste your article, notes, or any text
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] uppercase tracking-wider text-zinc-600 font-bold">
+                          Insert:
+                        </span>
+                        {EXAMPLES.contents.map((ex) => (
+                          <button
+                            key={ex.label}
+                            type="button"
+                            onClick={() => setPastedContent(ex.text)}
+                            className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-1 text-[10px] text-indigo-400 transition-colors hover:border-indigo-400 hover:bg-indigo-500/20"
+                          >
+                            {ex.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                     <textarea
                       value={pastedContent}
@@ -317,13 +385,6 @@ export default function GeneratePage() {
                           : "No content pasted yet"}
                       </span>
                       <div className="flex items-center gap-4">
-                        {/* <div className="flex items-center gap-2 text-[10px] text-zinc-600">
-                          <Zap className="h-3 w-3 text-amber-500/50" />
-                          <span>
-                            Est. {Math.ceil(pastedContent.length / 4) + 600}{" "}
-                            tokens
-                          </span>
-                        </div> */}
                         <Button
                           type="submit"
                           disabled={generating || !pastedContent.trim()}
