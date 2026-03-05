@@ -1,95 +1,18 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { downloadPPT } from "@/lib/ppt-generator";
-import { themes, type Theme } from "@/lib/themes";
-import { cn } from "@/lib/utils";
-import { AnimatePresence, motion } from "framer-motion";
 import {
-  Check,
-  ClipboardPaste,
-  Download,
-  Lightbulb,
-  Loader2,
+  ArrowRight,
+  FileText,
+  Palette,
   Sparkles,
   Wand2,
+  Zap,
 } from "lucide-react";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
-import {
-  generatePPTContent,
-  generatePPTFromContent,
-  type PPTData,
-} from "./actions/ai-ppt";
+import Link from "next/link";
+import { cookies } from "next/headers";
 
-/* ─── helpers ─── */
-const getGradStyle = (t: Theme): React.CSSProperties =>
-  t.gradient
-    ? {
-        background: `linear-gradient(${t.gradient.angle}deg, #${t.gradient.from}${t.gradient.mid ? `, #${t.gradient.mid}` : ""}, #${t.gradient.to})`,
-      }
-    : { backgroundColor: `#${t.background}` };
-
-/* ─── animation variants ─── */
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.06,
-      duration: 0.5,
-      ease: "easeOut" as const,
-    },
-  }),
-};
-
-export default function Home() {
-  const [topic, setTopic] = useState("");
-  const [pastedContent, setPastedContent] = useState("");
-  const [mode, setMode] = useState<"topic" | "content">("topic");
-  const [generating, setGenerating] = useState(false);
-  const [pptData, setPptData] = useState<PPTData | null>(null);
-  const [theme, setTheme] = useState<Theme>(themes[0]);
-  const previewRef = useRef<HTMLDivElement>(null);
-
-  /* ── generate ── */
-  const generate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mode === "topic" && !topic.trim())
-      return toast.error("Enter a topic first");
-    if (mode === "content" && !pastedContent.trim())
-      return toast.error("Paste your content first");
-    setGenerating(true);
-    try {
-      const data =
-        mode === "topic"
-          ? await generatePPTContent(topic)
-          : await generatePPTFromContent(pastedContent);
-      setPptData(data);
-      toast.success("Deck generated!");
-      setTimeout(
-        () => previewRef.current?.scrollIntoView({ behavior: "smooth" }),
-        400,
-      );
-    } catch {
-      toast.error("Generation failed — check your API key.");
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  /* ── download ── */
-  const download = async () => {
-    if (!pptData) return;
-    try {
-      await downloadPPT(pptData, theme);
-      toast.success("Exported!");
-    } catch {
-      toast.error("Export failed");
-    }
-  };
+export default async function LandingPage() {
+  const cookieStore = await cookies();
+  const isAuthenticated = !!cookieStore.get("better-auth.session_token");
 
   return (
     <div className="min-h-screen bg-[#07070A] text-zinc-100 font-sans antialiased relative">
@@ -102,34 +25,53 @@ export default function Home() {
 
       {/* ━━━━━ NAV ━━━━━ */}
       <nav className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-        <motion.div
-          initial={{ opacity: 0, x: -16 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-2.5"
-        >
+        <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white">
             <Sparkles className="h-5 w-5 text-black" />
           </div>
           <span className="text-lg font-semibold tracking-tight">
             Studio<span className="text-zinc-500">.ai</span>
           </span>
-        </motion.div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {isAuthenticated ? (
+            <Link href="/generate">
+              <Button className="h-9 gap-2 rounded-full bg-white px-5 text-sm font-semibold text-black hover:bg-zinc-200">
+                Go to Studio
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/sign-in">
+                <Button
+                  variant="ghost"
+                  className="h-9 rounded-full px-4 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800"
+                >
+                  Sign in
+                </Button>
+              </Link>
+              <Link href="/sign-up">
+                <Button className="h-9 gap-2 rounded-full bg-white px-5 text-sm font-semibold text-black hover:bg-zinc-200">
+                  Get Started
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+            </>
+          )}
+        </div>
       </nav>
 
-      <main className="relative z-10 mx-auto max-w-6xl space-y-28 px-6 pb-32">
+      <main className="relative z-10 mx-auto max-w-6xl px-6 pb-32">
         {/* ━━━━━ HERO ━━━━━ */}
-        <section className="pt-16 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="space-y-5"
-          >
-            <span className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-4 py-1 text-xs font-medium text-zinc-400 backdrop-blur">
+        <section className="pt-20 text-center sm:pt-28">
+          <div className="space-y-6">
+            <span className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-4 py-1.5 text-xs font-medium text-zinc-400 backdrop-blur">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Powered by Gemini
+              Powered by Gemini AI
             </span>
-            <h1 className="mx-auto max-w-3xl text-5xl font-bold leading-[1.08] tracking-tight sm:text-7xl">
+            <h1 className="mx-auto max-w-4xl text-5xl font-bold leading-[1.08] tracking-tight sm:text-7xl lg:text-8xl">
               Create stunning
               <br />
               <span className="bg-linear-to-r from-indigo-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
@@ -137,576 +79,215 @@ export default function Home() {
               </span>{" "}
               in seconds
             </h1>
-            <p className="mx-auto max-w-xl text-lg text-zinc-400">
+            <p className="mx-auto max-w-xl text-lg leading-relaxed text-zinc-400">
               Type a topic or paste your content — AI will craft a professional
-              deck for you, ready to download as .pptx.
+              deck for you, ready to download as .pptx. No design skills needed.
             </p>
-          </motion.div>
 
-          {/* ── mode tabs + input ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="mx-auto mt-10 max-w-2xl space-y-4"
-          >
-            {/* Mode Toggle */}
-            <div className="flex items-center justify-center gap-1 rounded-full border border-zinc-800 bg-zinc-900/60 p-1 w-fit mx-auto backdrop-blur">
-              <button
-                onClick={() => setMode("topic")}
-                className={cn(
-                  "flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-all",
-                  mode === "topic"
-                    ? "bg-white text-black shadow-sm"
-                    : "text-zinc-400 hover:text-zinc-200",
-                )}
-              >
-                <Lightbulb className="h-3.5 w-3.5" />
-                Topic
-              </button>
-              <button
-                onClick={() => setMode("content")}
-                className={cn(
-                  "flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-all",
-                  mode === "content"
-                    ? "bg-white text-black shadow-sm"
-                    : "text-zinc-400 hover:text-zinc-200",
-                )}
-              >
-                <ClipboardPaste className="h-3.5 w-3.5" />
-                Paste Content
-              </button>
-            </div>
-
-            <form onSubmit={generate} className="group relative">
-              <div className="absolute -inset-px rounded-2xl bg-linear-to-r from-indigo-500/40 via-cyan-500/40 to-emerald-500/40 opacity-0 blur-sm transition-opacity duration-700 group-focus-within:opacity-100" />
-
-              <AnimatePresence mode="wait">
-                {mode === "topic" ? (
-                  <motion.div
-                    key="topic"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.2 }}
-                    className="relative flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-2 pl-5 backdrop-blur-2xl"
-                  >
-                    <Wand2 className="h-5 w-5 shrink-0 text-zinc-500" />
-                    <Input
-                      value={topic}
-                      onChange={(e) => setTopic(e.target.value)}
-                      disabled={generating}
-                      placeholder="Describe your presentation topic…"
-                      className="h-12 border-none bg-transparent text-base placeholder:text-zinc-600 focus-visible:ring-0"
-                    />
-                    <Button
-                      type="submit"
-                      disabled={generating || !topic.trim()}
-                      className="h-11 shrink-0 rounded-xl bg-white px-6 font-semibold text-black hover:bg-zinc-200"
-                    >
-                      {generating ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        "Generate"
-                      )}
-                    </Button>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="content"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.2 }}
-                    className="relative flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 backdrop-blur-2xl"
-                  >
-                    <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium">
-                      <ClipboardPaste className="h-3.5 w-3.5" />
-                      Paste your article, notes, or any text below
-                    </div>
-                    <textarea
-                      value={pastedContent}
-                      onChange={(e) => setPastedContent(e.target.value)}
-                      disabled={generating}
-                      placeholder={
-                        "Paste your content here…\n\nFor example: meeting notes, blog post, research paper, article, course outline, or any raw text. AI will analyze it and create a structured presentation."
-                      }
-                      rows={7}
-                      className="w-full resize-none rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-sm leading-relaxed text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-700 focus:outline-none focus:ring-0"
-                    />
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-zinc-600">
-                        {pastedContent.length > 0
-                          ? `${pastedContent.split(/\s+/).filter(Boolean).length} words`
-                          : "No content pasted yet"}
-                      </span>
-                      <Button
-                        type="submit"
-                        disabled={generating || !pastedContent.trim()}
-                        className="h-10 shrink-0 rounded-xl bg-white px-6 font-semibold text-black hover:bg-zinc-200"
-                      >
-                        {generating ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          "Generate from Content"
-                        )}
-                      </Button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </form>
-          </motion.div>
-        </section>
-
-        {/* ━━━━━ THEME PICKER ━━━━━ */}
-        <section className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold">Visual Styles</h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Choose a theme — the preview updates instantly.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {themes.map((t, i) => {
-              const selected = theme.id === t.id;
-              return (
-                <motion.button
-                  key={t.id}
-                  variants={fadeUp}
-                  initial="hidden"
-                  animate="show"
-                  custom={i}
-                  onClick={() => setTheme(t)}
-                  className={cn(
-                    "group relative flex flex-col overflow-hidden rounded-xl border transition-all duration-200",
-                    selected
-                      ? "border-indigo-500 ring-2 ring-indigo-500/30"
-                      : "border-zinc-800 hover:border-zinc-700",
-                  )}
-                >
-                  {/* swatch */}
-                  <div
-                    className="relative aspect-video overflow-hidden"
-                    style={getGradStyle(t)}
-                  >
-                    {/* mini slide mockup */}
-                    <div className="absolute inset-0 flex flex-col justify-between p-3">
-                      <div className="space-y-1">
-                        <div
-                          className="h-2 w-14 rounded-full"
-                          style={{
-                            backgroundColor: `#${t.titleColor}`,
-                            opacity: 0.7,
-                          }}
-                        />
-                        <div
-                          className="h-1 w-8 rounded-full"
-                          style={{
-                            backgroundColor: `#${t.accentColor}`,
-                            opacity: 0.5,
-                          }}
-                        />
-                      </div>
-                      <div className="space-y-[3px]">
-                        <div
-                          className="h-[3px] w-12 rounded-full"
-                          style={{
-                            backgroundColor: `#${t.contentColor}`,
-                            opacity: 0.35,
-                          }}
-                        />
-                        <div
-                          className="h-[3px] w-9 rounded-full"
-                          style={{
-                            backgroundColor: `#${t.contentColor}`,
-                            opacity: 0.25,
-                          }}
-                        />
-                        <div
-                          className="h-[3px] w-6 rounded-full"
-                          style={{
-                            backgroundColor: `#${t.contentColor}`,
-                            opacity: 0.2,
-                          }}
-                        />
-                      </div>
-                    </div>
-                    {/* layout-specific mockup details */}
-                    {t.layoutType === "split" && (
-                      <div
-                        className="absolute bottom-0 left-0 top-0 w-[28%]"
-                        style={{
-                          backgroundColor: `#${t.secondaryAccent}`,
-                          opacity: 0.5,
-                        }}
-                      />
-                    )}
-                    {t.layoutType === "editorial" && (
-                      <div
-                        className="absolute left-3 right-3 top-[20%] h-px"
-                        style={{
-                          backgroundColor: `#${t.accentColor}`,
-                          opacity: 0.4,
-                        }}
-                      />
-                    )}
-                    {t.layoutType === "tech" && (
-                      <div
-                        className="absolute left-0 right-0 top-0 h-[4px]"
-                        style={{
-                          backgroundColor: `#${t.accentColor}`,
-                          opacity: 0.7,
-                        }}
-                      />
-                    )}
-                    {t.layoutType === "bold" && (
-                      <div
-                        className="absolute left-0 top-0 bottom-0 w-[4px]"
-                        style={{
-                          backgroundColor: `#${t.accentColor}`,
-                          opacity: 0.8,
-                        }}
-                      />
-                    )}
-                  </div>
-                  {/* info */}
-                  <div className="bg-zinc-900/80 px-3 py-2.5 text-left">
-                    <p className="text-xs font-semibold text-zinc-200">
-                      {t.name}
-                    </p>
-                    <p className="mt-0.5 text-[10px] text-zinc-500">{t.tag}</p>
-                    {/* color dots */}
-                    <div className="mt-1.5 flex gap-1">
-                      {[
-                        t.accentColor,
-                        t.titleColor,
-                        t.contentColor,
-                        t.secondaryAccent,
-                      ].map((c, ci) => (
-                        <span
-                          key={ci}
-                          className="h-2 w-2 rounded-full"
-                          style={{ backgroundColor: `#${c}` }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  {/* selected mark */}
-                  {selected && (
-                    <motion.div
-                      layoutId="sel"
-                      className="absolute right-2 top-2 rounded-full bg-indigo-500 p-1 shadow-lg shadow-indigo-500/40"
-                    >
-                      <Check className="h-2.5 w-2.5 text-white" />
-                    </motion.div>
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ━━━━━ LIVE PREVIEW ━━━━━ */}
-        <AnimatePresence>
-          {pptData && (
-            <motion.section
-              ref={previewRef}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="space-y-10"
-            >
-              {/* header bar */}
-              <div className="flex flex-col gap-5 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                    Live Preview · {pptData.slides.length} slides · {theme.name}
-                  </div>
-                  <h2 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-                    {pptData.title}
-                  </h2>
-                </div>
-                <Button
-                  onClick={download}
-                  className="h-12 gap-2 rounded-xl bg-white px-6 font-semibold text-black hover:bg-zinc-200"
-                >
-                  <Download className="h-4 w-4" />
-                  Export .pptx
+            {/* CTA buttons */}
+            <div className="flex items-center justify-center gap-4 pt-4">
+              <Link href={isAuthenticated ? "/generate" : "/sign-up"}>
+                <Button className="h-13 gap-2 rounded-xl bg-white px-8 text-base font-semibold text-black hover:bg-zinc-200 hover:shadow-lg hover:shadow-white/10 transition-all">
+                  <Wand2 className="h-4 w-4" />
+                  Start Creating — Free
                 </Button>
-              </div>
-
-              {/* slide grid */}
-              <div className="grid gap-8 md:grid-cols-2">
-                {/* ── TITLE SLIDE ── */}
-                <SlideFrame style={getGradStyle(theme)} idx={-1}>
-                  {/* decorations */}
-                  {(theme.layoutType === "bold" ||
-                    theme.layoutType === "tech") && (
-                    <>
-                      <div
-                        className="absolute left-0 top-0 bottom-0 w-1"
-                        style={{ backgroundColor: `#${theme.accentColor}` }}
-                      />
-                      <div
-                        className="absolute -right-12 -top-12 h-48 w-48 rounded-full opacity-10 blur-2xl"
-                        style={{ backgroundColor: `#${theme.accentColor}` }}
-                      />
-                    </>
-                  )}
-                  {theme.layoutType === "split" && (
-                    <div
-                      className="absolute bottom-0 left-0 top-0 w-[32%]"
-                      style={{
-                        backgroundColor: `#${theme.secondaryAccent}`,
-                        opacity: 0.6,
-                      }}
-                    />
-                  )}
-                  {theme.layoutType === "editorial" && (
-                    <>
-                      <div
-                        className="absolute left-[8%] right-[8%] top-[22%] h-px"
-                        style={{
-                          backgroundColor: `#${theme.accentColor}`,
-                          opacity: 0.5,
-                        }}
-                      />
-                      <div
-                        className="absolute bottom-[22%] left-[8%] right-[8%] h-px"
-                        style={{
-                          backgroundColor: `#${theme.accentColor}`,
-                          opacity: 0.5,
-                        }}
-                      />
-                    </>
-                  )}
-                  <div
-                    className={cn(
-                      "relative z-10 flex flex-col gap-5",
-                      theme.layoutType === "split"
-                        ? "items-start pl-[36%] text-left"
-                        : "items-center text-center",
-                    )}
-                  >
-                    <span
-                      className="text-[9px] font-bold uppercase tracking-[0.35em]"
-                      style={{ color: `#${theme.accentColor}` }}
-                    >
-                      A Presentation by Studio.ai
-                    </span>
-                    <h3
-                      className="max-w-[85%] text-3xl font-bold uppercase leading-tight tracking-tight md:text-4xl"
-                      style={{ color: `#${theme.titleColor}` }}
-                    >
-                      {pptData.title}
-                    </h3>
-                    <div
-                      className="h-1 w-16 rounded-full"
-                      style={{ backgroundColor: `#${theme.accentColor}` }}
-                    />
-                  </div>
-                </SlideFrame>
-
-                {/* ── CONTENT SLIDES ── */}
-                {pptData.slides.map((slide, i) => (
-                  <SlideFrame
-                    key={i}
-                    style={{ backgroundColor: `#${theme.background}` }}
-                    idx={i}
-                  >
-                    {/* layout decorations */}
-                    {theme.layoutType === "bold" && (
-                      <div
-                        className="absolute left-0 top-0 bottom-0 w-1"
-                        style={{ backgroundColor: `#${theme.accentColor}` }}
-                      />
-                    )}
-                    {theme.layoutType === "split" && (
-                      <div
-                        className="absolute bottom-0 left-0 top-0 w-[32%] flex flex-col justify-center p-5"
-                        style={{ backgroundColor: `#${theme.secondaryAccent}` }}
-                      >
-                        <span
-                          className="text-lg font-bold leading-snug"
-                          style={{ color: `#${theme.titleColor}` }}
-                        >
-                          {slide.title}
-                        </span>
-                        <div
-                          className="mt-3 h-0.5 w-10 rounded-full"
-                          style={{ backgroundColor: `#${theme.accentColor}` }}
-                        />
-                      </div>
-                    )}
-                    {theme.layoutType === "editorial" && (
-                      <div
-                        className="absolute bottom-0 left-[5%] top-0 w-px opacity-30"
-                        style={{ backgroundColor: `#${theme.accentColor}` }}
-                      />
-                    )}
-                    {theme.layoutType === "tech" && (
-                      <>
-                        <div
-                          className="absolute left-0 right-0 top-0 h-0.5"
-                          style={{ backgroundColor: `#${theme.accentColor}` }}
-                        />
-                        <div
-                          className="absolute bottom-0 left-0 right-0 h-0.5 opacity-40"
-                          style={{ backgroundColor: `#${theme.accentColor}` }}
-                        />
-                      </>
-                    )}
-
-                    <div
-                      className={cn(
-                        "relative z-10 flex h-full flex-col",
-                        theme.layoutType === "split" ? "pl-[36%]" : "",
-                      )}
-                    >
-                      {/* title (skip for split — shown in sidebar) */}
-                      {theme.layoutType !== "split" && (
-                        <div className="mb-4">
-                          <div className="flex items-center justify-between">
-                            <h4
-                              className="text-lg font-bold"
-                              style={{ color: `#${theme.titleColor}` }}
-                            >
-                              {slide.title}
-                            </h4>
-                            <span
-                              className="text-[10px] font-semibold opacity-30"
-                              style={{ color: `#${theme.contentColor}` }}
-                            >
-                              {String(i + 1).padStart(2, "0")}
-                            </span>
-                          </div>
-                          <div
-                            className="mt-2 h-0.5 w-10 rounded-full"
-                            style={{ backgroundColor: `#${theme.accentColor}` }}
-                          />
-                        </div>
-                      )}
-
-                      {/* bullet points */}
-                      <div
-                        className={cn(
-                          "grid flex-1 content-start gap-3",
-                          slide.content.length > 4
-                            ? "grid-cols-2"
-                            : "grid-cols-1",
-                        )}
-                      >
-                        {slide.content.map((pt, pi) => (
-                          <div
-                            key={pi}
-                            className="flex items-start gap-2.5 text-[11px] leading-relaxed"
-                          >
-                            <span
-                              className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded text-[8px] font-bold"
-                              style={{
-                                backgroundColor: `#${theme.accentColor}22`,
-                                color: `#${theme.accentColor}`,
-                              }}
-                            >
-                              {pi + 1}
-                            </span>
-                            <span style={{ color: `#${theme.contentColor}` }}>
-                              {pt}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* footer */}
-                      <div
-                        className="mt-auto flex items-center justify-between border-t pt-2 opacity-25"
-                        style={{ borderColor: `#${theme.contentColor}22` }}
-                      >
-                        <div className="flex gap-0.5">
-                          {[1, 2, 3].map((d) => (
-                            <div
-                              key={d}
-                              className="h-1 w-1 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  d === 1
-                                    ? `#${theme.accentColor}`
-                                    : `#${theme.contentColor}44`,
-                              }}
-                            />
-                          ))}
-                        </div>
-                        <span
-                          className="text-[7px] font-bold uppercase tracking-widest"
-                          style={{ color: `#${theme.contentColor}` }}
-                        >
-                          Confidential
-                        </span>
-                      </div>
-                    </div>
-                  </SlideFrame>
-                ))}
-
-                {/* ── CLOSING SLIDE ── */}
-                <SlideFrame
-                  style={
-                    theme.gradient
-                      ? getGradStyle(theme)
-                      : { backgroundColor: `#${theme.secondaryAccent}` }
-                  }
-                  idx={pptData.slides.length}
+              </Link>
+              <a href="#features">
+                <Button
+                  variant="ghost"
+                  className="h-13 rounded-xl border border-zinc-800 px-6 text-base text-zinc-300 hover:bg-zinc-900 hover:text-white"
                 >
-                  {(theme.layoutType === "bold" ||
-                    theme.layoutType === "tech") && (
-                    <div
-                      className="absolute left-0 top-0 bottom-0 w-1"
-                      style={{ backgroundColor: `#${theme.accentColor}` }}
-                    />
-                  )}
-                  <div className="relative z-10 flex flex-col items-center gap-4 text-center">
-                    <span
-                      className="text-[9px] font-bold uppercase tracking-[0.4em] opacity-60"
-                      style={{
-                        color: theme.gradient
-                          ? "#FFFFFF"
-                          : `#${theme.accentColor}`,
-                      }}
-                    >
-                      End of Presentation
-                    </span>
-                    <h3
-                      className="text-4xl font-bold tracking-tight"
-                      style={{
-                        color: theme.gradient
-                          ? "#FFFFFF"
-                          : `#${theme.titleColor}`,
-                      }}
-                    >
-                      Thank You
-                    </h3>
-                    <div
-                      className="h-1 w-12 rounded-full"
-                      style={{ backgroundColor: `#${theme.accentColor}` }}
-                    />
-                    <p
-                      className="text-sm opacity-70"
-                      style={{
-                        color: theme.gradient
-                          ? "#FFFFFF"
-                          : `#${theme.contentColor}`,
-                      }}
-                    >
-                      Questions & Discussion
-                    </p>
-                  </div>
-                </SlideFrame>
+                  Learn More
+                </Button>
+              </a>
+            </div>
+          </div>
+
+          {/* ── Hero mockup ── */}
+          <div className="mx-auto mt-20 max-w-4xl">
+            <div className="relative overflow-hidden rounded-2xl border border-zinc-800/60 bg-zinc-900/30 p-1 shadow-2xl shadow-indigo-500/5">
+              {/* top bar */}
+              <div className="flex items-center gap-2 rounded-t-xl bg-zinc-900/80 px-4 py-3 border-b border-zinc-800/50">
+                <div className="flex gap-1.5">
+                  <div className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-zinc-700" />
+                </div>
+                <div className="flex-1 text-center">
+                  <span className="text-[11px] text-zinc-600">
+                    studio.ai/generate
+                  </span>
+                </div>
               </div>
-            </motion.section>
-          )}
-        </AnimatePresence>
+              {/* slide preview grid */}
+              <div className="grid grid-cols-3 gap-3 p-5 bg-zinc-950/50">
+                {[
+                  {
+                    bg: "bg-gradient-to-br from-indigo-600 to-purple-700",
+                    label: "Title Slide",
+                  },
+                  {
+                    bg: "bg-gradient-to-br from-zinc-800 to-zinc-900",
+                    label: "Key Insights",
+                  },
+                  {
+                    bg: "bg-gradient-to-br from-cyan-800 to-teal-900",
+                    label: "Data Points",
+                  },
+                  {
+                    bg: "bg-gradient-to-br from-zinc-800 to-zinc-900",
+                    label: "Analysis",
+                  },
+                  {
+                    bg: "bg-gradient-to-br from-zinc-800 to-zinc-900",
+                    label: "Summary",
+                  },
+                  {
+                    bg: "bg-gradient-to-br from-emerald-800 to-green-900",
+                    label: "Thank You",
+                  },
+                ].map((slide, i) => (
+                  <div
+                    key={i}
+                    className={`${slide.bg} aspect-video rounded-lg p-4 flex flex-col justify-between border border-white/5`}
+                  >
+                    <div className="space-y-1">
+                      <div className="h-1.5 w-10 rounded-full bg-white/30" />
+                      <div className="h-1 w-6 rounded-full bg-white/15" />
+                    </div>
+                    <span className="text-[8px] text-white/40 font-medium">
+                      {slide.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ━━━━━ FEATURES ━━━━━ */}
+        <section id="features" className="pt-32 space-y-16">
+          <div className="text-center space-y-4">
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-indigo-400">
+              Features
+            </span>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Everything you need for{" "}
+              <span className="bg-linear-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+                perfect decks
+              </span>
+            </h2>
+            <p className="mx-auto max-w-lg text-zinc-400">
+              From idea to export in under a minute. Our AI handles the
+              structure, design, and formatting.
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                icon: Wand2,
+                title: "AI-Powered Generation",
+                description:
+                  "Just type a topic and our Gemini-powered AI creates a fully structured presentation with professional content.",
+                gradient: "from-indigo-500/20 to-purple-500/20",
+                iconColor: "text-indigo-400",
+              },
+              {
+                icon: Palette,
+                title: "10+ Premium Themes",
+                description:
+                  "Choose from professionally designed themes with unique layouts — bold, editorial, split-screen, and more.",
+                gradient: "from-cyan-500/20 to-teal-500/20",
+                iconColor: "text-cyan-400",
+              },
+              {
+                icon: FileText,
+                title: "Paste & Transform",
+                description:
+                  "Have existing content? Paste any text — meeting notes, articles, research — and AI structures it into slides.",
+                gradient: "from-emerald-500/20 to-green-500/20",
+                iconColor: "text-emerald-400",
+              },
+              {
+                icon: Zap,
+                title: "Instant Preview",
+                description:
+                  "See your slides render in real-time with live theme switching. What you see is what you export.",
+                gradient: "from-amber-500/20 to-orange-500/20",
+                iconColor: "text-amber-400",
+              },
+              {
+                icon: ArrowRight,
+                title: "Export as .pptx",
+                description:
+                  "Download your presentation as a PowerPoint file, ready to present. Compatible with all major tools.",
+                gradient: "from-pink-500/20 to-rose-500/20",
+                iconColor: "text-pink-400",
+              },
+              {
+                icon: Sparkles,
+                title: "Professional Quality",
+                description:
+                  "Every slide is crafted with proper hierarchy, consistent styling, and polished layout decorations.",
+                gradient: "from-violet-500/20 to-purple-500/20",
+                iconColor: "text-violet-400",
+              },
+            ].map((feature) => (
+              <div
+                key={feature.title}
+                className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 transition-all duration-300 hover:border-zinc-700 hover:bg-zinc-900/50"
+              >
+                <div
+                  className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 transition-opacity group-hover:opacity-100`}
+                />
+                <div className="relative z-10 space-y-4">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800/80 ${feature.iconColor}`}
+                  >
+                    <feature.icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-base font-semibold text-zinc-100">
+                    {feature.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-zinc-400">
+                    {feature.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ━━━━━ CTA ━━━━━ */}
+        <section className="pt-32">
+          <div className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/30 p-12 text-center sm:p-16">
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute -left-[20%] -top-[40%] h-[60vh] w-[60vh] rounded-full bg-indigo-600/8 blur-[120px]" />
+              <div className="absolute -bottom-[30%] -right-[20%] h-[50vh] w-[50vh] rounded-full bg-cyan-500/6 blur-[120px]" />
+            </div>
+            <div className="relative z-10 space-y-6">
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                Ready to create your next{" "}
+                <span className="bg-linear-to-r from-indigo-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+                  masterpiece
+                </span>
+                ?
+              </h2>
+              <p className="mx-auto max-w-md text-zinc-400">
+                Join thousands of professionals who use Studio.ai to create
+                stunning presentations in seconds.
+              </p>
+              <Link href={isAuthenticated ? "/generate" : "/sign-up"}>
+                <Button className="h-13 gap-2 rounded-xl bg-white px-8 text-base font-semibold text-black hover:bg-zinc-200 hover:shadow-lg hover:shadow-white/10 transition-all mt-4">
+                  <Sparkles className="h-4 w-4" />
+                  Get Started for Free
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* ━━ footer ━━ */}
@@ -727,35 +308,5 @@ export default function Home() {
         </div>
       </footer>
     </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   SlideFrame — reusable slide preview wrapper
-   ───────────────────────────────────────────── */
-function SlideFrame({
-  children,
-  style,
-  idx,
-}: {
-  children: React.ReactNode;
-  style: React.CSSProperties;
-  idx: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        delay: 0.08 * (idx + 1),
-        duration: 0.5,
-        ease: [0.25, 1, 0.5, 1],
-      }}
-      whileHover={{ y: -4, transition: { duration: 0.25 } }}
-      className="group relative flex aspect-video flex-col items-center justify-center overflow-hidden rounded-2xl p-8 shadow-xl ring-1 ring-white/6"
-      style={style}
-    >
-      {children}
-    </motion.div>
   );
 }
