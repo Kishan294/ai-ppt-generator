@@ -26,6 +26,8 @@ import {
   generatePPTFromContent,
   type PPTData,
 } from "@/app/actions/ai-ppt";
+import { savePresentation } from "@/app/actions/presentation";
+import Link from "next/link";
 
 /* ─── helpers ─── */
 const getGradStyle = (t: Theme): React.CSSProperties =>
@@ -88,12 +90,23 @@ export default function GeneratePage() {
           ? await generatePPTContent(topic)
           : await generatePPTFromContent(pastedContent);
       setPptData(data);
-      toast.success("Deck generated!");
+
+      // Auto-save to database
+      await savePresentation({
+        title: data.title,
+        topic: mode === "topic" ? topic : undefined,
+        themeId: theme.id,
+        slideCount: data.slides.length,
+        content: data,
+      });
+
+      toast.success("PPT created!");
       setTimeout(
         () => previewRef.current?.scrollIntoView({ behavior: "smooth" }),
         400,
       );
-    } catch {
+    } catch (error) {
+      console.error(error);
       toast.error("Generation failed — check your API key.");
     } finally {
       setGenerating(false);
@@ -140,6 +153,15 @@ export default function GeneratePage() {
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center gap-3"
         >
+          <Link href="/dashboard">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-4 text-xs text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800"
+            >
+              My Presentations
+            </Button>
+          </Link>
           <div className="flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-400 backdrop-blur">
             <User className="h-3.5 w-3.5" />
             <span>Account</span>
