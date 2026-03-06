@@ -36,6 +36,34 @@ export async function savePresentation(data: {
 }
 
 /**
+ * Update an existing presentation.
+ */
+export async function updatePresentation(
+  id: string,
+  data: {
+    title?: string;
+    themeId?: string;
+    slideCount?: number;
+    content?: PPTData;
+  },
+) {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error("Not authenticated");
+  }
+
+  await db
+    .update(presentation)
+    .set({
+      ...data,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(presentation.id, id), eq(presentation.userId, user.id)));
+
+  return { success: true };
+}
+
+/**
  * Fetch all presentations for the current user.
  */
 export async function getUserPresentations() {

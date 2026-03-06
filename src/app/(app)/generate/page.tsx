@@ -5,7 +5,10 @@ import {
   generatePPTFromContent,
   type PPTData,
 } from "@/app/actions/ai-ppt";
-import { savePresentation } from "@/app/actions/presentation";
+import {
+  savePresentation,
+  updatePresentation,
+} from "@/app/actions/presentation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
@@ -17,10 +20,14 @@ import {
   Check,
   ClipboardPaste,
   Download,
+  Edit2,
   Lightbulb,
   Loader2,
   LogOut,
+  PlusCircle,
+  Save,
   Sparkles,
+  Trash2,
   User,
   Wand2,
 } from "lucide-react";
@@ -47,7 +54,89 @@ export default function GeneratePage() {
   const [theme, setTheme] = useState<Theme>(themes[0]);
   const [signingOut, setSigningOut] = useState(false);
   const [filter, setFilter] = useState<ThemeCategory | "all">("all");
+  const [isEditing, setIsEditing] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [currentPresId, setCurrentPresId] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+
+  /* ── local updates (edit options) ── */
+  const updateTitle = (val: string) => {
+    if (!pptData) return;
+    setPptData({ ...pptData, title: val });
+  };
+
+  const updateSlideTitle = (idx: number, val: string) => {
+    if (!pptData) return;
+    const newSlides = [...pptData.slides];
+    newSlides[idx].title = val;
+    setPptData({ ...pptData, slides: newSlides });
+  };
+
+  const updateSlideContent = (sIdx: number, cIdx: number, val: string) => {
+    if (!pptData) return;
+    const newSlides = [...pptData.slides];
+    newSlides[sIdx].content[cIdx] = val;
+    setPptData({ ...pptData, slides: newSlides });
+  };
+
+  const addSlide = () => {
+    if (!pptData) return;
+    const newSlide = {
+      title: "New Slide Title",
+      content: ["Point one...", "Point two..."],
+    };
+    setPptData({ ...pptData, slides: [...pptData.slides, newSlide] });
+    toast.success("Slide added");
+  };
+
+  const removeSlide = (idx: number) => {
+    if (!pptData || pptData.slides.length <= 1) return;
+    const newSlides = pptData.slides.filter((_, i) => i !== idx);
+    setPptData({ ...pptData, slides: newSlides });
+    toast.info("Slide removed");
+  };
+
+  const addPoint = (sIdx: number) => {
+    if (!pptData) return;
+    const newSlides = [...pptData.slides];
+    newSlides[sIdx].content.push("New point...");
+    setPptData({ ...pptData, slides: newSlides });
+  };
+
+  const removePoint = (sIdx: number, cIdx: number) => {
+    if (!pptData || pptData.slides[sIdx].content.length <= 1) return;
+    const newSlides = [...pptData.slides];
+    newSlides[sIdx].content = newSlides[sIdx].content.filter(
+      (_, i) => i !== cIdx,
+    );
+    setPptData({ ...pptData, slides: newSlides });
+  };
+
+  /* ── finish editing ── */
+  const finishEditing = async () => {
+    if (!isEditing) {
+      setIsEditing(true);
+      return;
+    }
+
+    if (currentPresId && pptData) {
+      setIsUpdating(true);
+      try {
+        await updatePresentation(currentPresId, {
+          title: pptData.title,
+          slideCount: pptData.slides.length,
+          content: pptData,
+        });
+        toast.success("Changes saved");
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to save changes");
+      } finally {
+        setIsUpdating(false);
+      }
+    }
+    setIsEditing(false);
+  };
 
   const filteredThemes =
     filter === "all"
@@ -84,14 +173,14 @@ export default function GeneratePage() {
           : await generatePPTFromContent(pastedContent);
       setPptData(data);
 
-      // Auto-save to database
-      await savePresentation({
+      const id = await savePresentation({
         title: data.title,
         topic: mode === "topic" ? topic : undefined,
         themeId: theme.id,
         slideCount: data.slides.length,
         content: data,
       });
+      setCurrentPresId(id);
 
       toast.success("PPT created!");
       setTimeout(
@@ -599,14 +688,58 @@ export default function GeneratePage() {
                     {pptData.title}
                   </h2>
                 </div>
-                <Button
-                  onClick={download}
-                  className="h-12 gap-2 rounded-xl bg-white px-6 font-semibold text-black hover:bg-zinc-200"
-                >
-                  <Download className="h-4 w-4" />
-                  Export .pptx
-                </Button>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Button
+                    variant="outline"
+                    onClick={finishEditing}
+                    disabled={isUpdating}
+                    className={cn(
+                      "h-12 gap-2 rounded-xl border-zinc-800 bg-zinc-900/50 px-6 font-semibold transition-all",
+                      isEditing
+                        ? "border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10"
+                        : "text-zinc-400 hover:text-white",
+                    )}
+                  >
+                    {isUpdating ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : isEditing ? (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Save Changes
+                      </>
+                    ) : (
+                      <>
+                        <Edit2 className="h-4 w-4" />
+                        Edit Slides
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={download}
+                    className="h-12 gap-2 rounded-xl bg-white px-6 font-semibold text-black hover:bg-zinc-200"
+                  >
+                    <Download className="h-4 w-4" />
+                    Export .pptx
+                  </Button>
+                </div>
               </div>
+
+              {isEditing && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex justify-center"
+                >
+                  <Button
+                    onClick={addSlide}
+                    variant="ghost"
+                    className="gap-2 rounded-full border border-dashed border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Add New Slide
+                  </Button>
+                </motion.div>
+              )}
 
               {/* slide grid */}
               <div className="grid gap-8 md:grid-cols-2">
@@ -667,12 +800,22 @@ export default function GeneratePage() {
                     >
                       A Presentation by Studio.ai
                     </span>
-                    <h3
-                      className="max-w-[85%] text-3xl font-bold uppercase leading-tight tracking-tight md:text-4xl"
-                      style={{ color: `#${theme.titleColor}` }}
-                    >
-                      {pptData.title}
-                    </h3>
+                    {isEditing ? (
+                      <textarea
+                        value={pptData.title}
+                        onChange={(e) => updateTitle(e.target.value)}
+                        className="w-full max-w-[85%] border-none bg-transparent text-center text-3xl font-bold uppercase leading-tight tracking-tight focus:ring-0 md:text-4xl"
+                        style={{ color: `#${theme.titleColor}` }}
+                        rows={2}
+                      />
+                    ) : (
+                      <h3
+                        className="max-w-[85%] text-3xl font-bold uppercase leading-tight tracking-tight md:text-4xl"
+                        style={{ color: `#${theme.titleColor}` }}
+                      >
+                        {pptData.title}
+                      </h3>
+                    )}
                     <div
                       className="h-1 w-16 rounded-full"
                       style={{ backgroundColor: `#${theme.accentColor}` }}
@@ -682,142 +825,215 @@ export default function GeneratePage() {
 
                 {/* ── CONTENT SLIDES ── */}
                 {pptData.slides.map((slide, i) => (
-                  <SlideFrame
-                    key={i}
-                    style={{ backgroundColor: `#${theme.background}` }}
-                    idx={i}
-                  >
-                    {/* layout decorations */}
-                    {theme.layoutType === "bold" && (
-                      <div
-                        className="absolute left-0 top-0 bottom-0 w-1"
-                        style={{ backgroundColor: `#${theme.accentColor}` }}
-                      />
-                    )}
-                    {theme.layoutType === "split" && (
-                      <div
-                        className="absolute bottom-0 left-0 top-0 w-[32%] flex flex-col justify-center p-5"
-                        style={{ backgroundColor: `#${theme.secondaryAccent}` }}
-                      >
-                        <span
-                          className="text-lg font-bold leading-snug"
-                          style={{ color: `#${theme.titleColor}` }}
-                        >
-                          {slide.title}
-                        </span>
-                        <div
-                          className="mt-3 h-0.5 w-10 rounded-full"
-                          style={{ backgroundColor: `#${theme.accentColor}` }}
-                        />
-                      </div>
-                    )}
-                    {theme.layoutType === "editorial" && (
-                      <div
-                        className="absolute bottom-0 left-[5%] top-0 w-px opacity-30"
-                        style={{ backgroundColor: `#${theme.accentColor}` }}
-                      />
-                    )}
-                    {theme.layoutType === "tech" && (
-                      <>
-                        <div
-                          className="absolute left-0 right-0 top-0 h-0.5"
-                          style={{ backgroundColor: `#${theme.accentColor}` }}
-                        />
-                        <div
-                          className="absolute bottom-0 left-0 right-0 h-0.5 opacity-40"
-                          style={{ backgroundColor: `#${theme.accentColor}` }}
-                        />
-                      </>
-                    )}
-
-                    <div
-                      className={cn(
-                        "relative z-10 flex h-full flex-col",
-                        theme.layoutType === "split" ? "pl-[36%]" : "",
-                      )}
+                  <div key={i} className="group/slide relative">
+                    <SlideFrame
+                      style={{ backgroundColor: `#${theme.background}` }}
+                      idx={i}
                     >
-                      {/* title (skip for split — shown in sidebar) */}
-                      {theme.layoutType !== "split" && (
-                        <div className="mb-4">
-                          <div className="flex items-center justify-between">
-                            <h4
-                              className="text-lg font-bold"
-                              style={{ color: `#${theme.titleColor}` }}
-                            >
-                              {slide.title}
-                            </h4>
-                            <span
-                              className="text-[10px] font-semibold opacity-30"
-                              style={{ color: `#${theme.contentColor}` }}
-                            >
-                              {String(i + 1).padStart(2, "0")}
-                            </span>
-                          </div>
+                      {/* ... slide content ... */}
+                      {/* layout decorations */}
+                      {theme.layoutType === "bold" && (
+                        <div
+                          className="absolute left-0 top-0 bottom-0 w-1"
+                          style={{ backgroundColor: `#${theme.accentColor}` }}
+                        />
+                      )}
+                      {theme.layoutType === "split" && (
+                        <div
+                          className="absolute bottom-0 left-0 top-0 w-[32%] flex flex-col justify-center p-5"
+                          style={{
+                            backgroundColor: `#${theme.secondaryAccent}`,
+                          }}
+                        >
+                          <span
+                            className="text-lg font-bold leading-snug"
+                            style={{ color: `#${theme.titleColor}` }}
+                          >
+                            {slide.title}
+                          </span>
                           <div
-                            className="mt-2 h-0.5 w-10 rounded-full"
+                            className="mt-3 h-0.5 w-10 rounded-full"
                             style={{ backgroundColor: `#${theme.accentColor}` }}
                           />
                         </div>
                       )}
+                      {theme.layoutType === "editorial" && (
+                        <div
+                          className="absolute bottom-0 left-[5%] top-0 w-px opacity-30"
+                          style={{ backgroundColor: `#${theme.accentColor}` }}
+                        />
+                      )}
+                      {theme.layoutType === "tech" && (
+                        <>
+                          <div
+                            className="absolute left-0 right-0 top-0 h-0.5"
+                            style={{ backgroundColor: `#${theme.accentColor}` }}
+                          />
+                          <div
+                            className="absolute bottom-0 left-0 right-0 h-0.5 opacity-40"
+                            style={{ backgroundColor: `#${theme.accentColor}` }}
+                          />
+                        </>
+                      )}
 
-                      {/* bullet points */}
                       <div
                         className={cn(
-                          "grid flex-1 content-start gap-3",
-                          slide.content.length > 4
-                            ? "grid-cols-2"
-                            : "grid-cols-1",
+                          "relative z-10 flex h-full flex-col",
+                          theme.layoutType === "split" ? "pl-[36%]" : "",
                         )}
                       >
-                        {slide.content.map((pt, pi) => (
-                          <div
-                            key={pi}
-                            className="flex items-start gap-2.5 text-[11px] leading-relaxed"
-                          >
-                            <span
-                              className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded text-[8px] font-bold"
-                              style={{
-                                backgroundColor: `#${theme.accentColor}22`,
-                                color: `#${theme.accentColor}`,
-                              }}
-                            >
-                              {pi + 1}
-                            </span>
-                            <span style={{ color: `#${theme.contentColor}` }}>
-                              {pt}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* footer */}
-                      <div
-                        className="mt-auto flex items-center justify-between border-t pt-2 opacity-25"
-                        style={{ borderColor: `#${theme.contentColor}22` }}
-                      >
-                        <div className="flex gap-0.5">
-                          {[1, 2, 3].map((d) => (
+                        {/* title (skip for split — shown in sidebar) */}
+                        {theme.layoutType !== "split" && (
+                          <div className="mb-4">
+                            <div className="flex items-center justify-between">
+                              {isEditing ? (
+                                <Input
+                                  value={slide.title}
+                                  onChange={(e) =>
+                                    updateSlideTitle(i, e.target.value)
+                                  }
+                                  className="h-8 border-none bg-transparent p-0 text-lg font-bold focus-visible:ring-0"
+                                  style={{ color: `#${theme.titleColor}` }}
+                                />
+                              ) : (
+                                <h4
+                                  className="text-lg font-bold"
+                                  style={{ color: `#${theme.titleColor}` }}
+                                >
+                                  {slide.title}
+                                </h4>
+                              )}
+                              <span
+                                className="text-[10px] font-semibold opacity-30"
+                                style={{ color: `#${theme.contentColor}` }}
+                              >
+                                {String(i + 1).padStart(2, "0")}
+                              </span>
+                            </div>
                             <div
-                              key={d}
-                              className="h-1 w-1 rounded-full"
+                              className="mt-2 h-0.5 w-10 rounded-full"
                               style={{
-                                backgroundColor:
-                                  d === 1
-                                    ? `#${theme.accentColor}`
-                                    : `#${theme.contentColor}44`,
+                                backgroundColor: `#${theme.accentColor}`,
                               }}
                             />
-                          ))}
-                        </div>
-                        <span
-                          className="text-[7px] font-bold uppercase tracking-widest"
-                          style={{ color: `#${theme.contentColor}` }}
+                          </div>
+                        )}
+
+                        {/* Split layout title edit */}
+                        {theme.layoutType === "split" && isEditing && (
+                          <div className="mb-4">
+                            <Input
+                              value={slide.title}
+                              onChange={(e) =>
+                                updateSlideTitle(i, e.target.value)
+                              }
+                              className="h-8 border-none bg-transparent p-0 text-sm font-bold focus-visible:ring-0"
+                              style={{ color: `#${theme.titleColor}` }}
+                              placeholder="Edit slide title..."
+                            />
+                          </div>
+                        )}
+
+                        {/* bullet points */}
+                        <div
+                          className={cn(
+                            "grid flex-1 content-start gap-3",
+                            slide.content.length > 4
+                              ? "grid-cols-2"
+                              : "grid-cols-1",
+                          )}
                         >
-                          Confidential
-                        </span>
+                          {slide.content.map((pt, pi) => (
+                            <div
+                              key={pi}
+                              className="group/pt relative flex items-start gap-2.5 text-[11px] leading-relaxed"
+                            >
+                              <span
+                                className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded text-[8px] font-bold"
+                                style={{
+                                  backgroundColor: `#${theme.accentColor}22`,
+                                  color: `#${theme.accentColor}`,
+                                }}
+                              >
+                                {pi + 1}
+                              </span>
+                              {isEditing ? (
+                                <div className="flex flex-1 items-start gap-2">
+                                  <textarea
+                                    value={pt}
+                                    onChange={(e) =>
+                                      updateSlideContent(i, pi, e.target.value)
+                                    }
+                                    className="w-full border-none bg-transparent p-0 focus:ring-0"
+                                    style={{ color: `#${theme.contentColor}` }}
+                                    rows={Math.ceil(pt.length / 40)}
+                                  />
+                                  <button
+                                    onClick={() => removePoint(i, pi)}
+                                    className="mt-0.5 text-zinc-600 opacity-0 transition-opacity hover:text-red-400 group-hover/pt:opacity-100"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span
+                                  style={{ color: `#${theme.contentColor}` }}
+                                >
+                                  {pt}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                          {isEditing && (
+                            <button
+                              onClick={() => addPoint(i)}
+                              className="flex items-center gap-2 text-[10px] text-zinc-500 hover:text-zinc-300"
+                            >
+                              <PlusCircle className="h-3 w-3" />
+                              Add Point
+                            </button>
+                          )}
+                        </div>
+
+                        {/* footer */}
+                        <div
+                          className="mt-auto flex items-center justify-between border-t pt-2 opacity-25"
+                          style={{ borderColor: `#${theme.contentColor}22` }}
+                        >
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3].map((d) => (
+                              <div
+                                key={d}
+                                className="h-1 w-1 rounded-full"
+                                style={{
+                                  backgroundColor:
+                                    d === 1
+                                      ? `#${theme.accentColor}`
+                                      : `#${theme.contentColor}44`,
+                                }}
+                              />
+                            ))}
+                          </div>
+                          <span
+                            className="text-[7px] font-bold uppercase tracking-widest"
+                            style={{ color: `#${theme.contentColor}` }}
+                          >
+                            Confidential
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </SlideFrame>
+                    </SlideFrame>
+
+                    {isEditing && (
+                      <button
+                        onClick={() => removeSlide(i)}
+                        className="absolute -right-3 -top-3 z-30 flex h-8 w-8 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 text-zinc-500 shadow-xl transition-all hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 opacity-0 group-hover/slide:opacity-100"
+                        title="Remove Slide"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 ))}
 
                 {/* ── CLOSING SLIDE ── */}
