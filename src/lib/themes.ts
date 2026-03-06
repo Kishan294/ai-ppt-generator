@@ -1,3 +1,5 @@
+export type ThemeCategory = "dark" | "light" | "professional" | "creative";
+
 export interface Theme {
   id: string;
   name: string;
@@ -9,6 +11,7 @@ export interface Theme {
   secondaryAccent: string;
   fontPair: { heading: string; body: string };
   layoutType: "clean" | "bold" | "split" | "editorial" | "tech";
+  categories: ThemeCategory[];
   gradient?: {
     from: string;
     to: string;
@@ -29,6 +32,7 @@ export const themes: Theme[] = [
     secondaryAccent: "1C1917",
     fontPair: { heading: "Playfair Display", body: "Inter" },
     layoutType: "bold",
+    categories: ["dark", "professional"],
     gradient: { from: "09090B", to: "1C1917", angle: 135 },
   },
   {
@@ -42,6 +46,7 @@ export const themes: Theme[] = [
     secondaryAccent: "F0F9FF",
     fontPair: { heading: "DM Sans", body: "DM Sans" },
     layoutType: "clean",
+    categories: ["light", "professional"],
   },
   {
     id: "pitch",
@@ -54,6 +59,7 @@ export const themes: Theme[] = [
     secondaryAccent: "EEF2FF",
     fontPair: { heading: "Inter", body: "Inter" },
     layoutType: "split",
+    categories: ["light", "professional"],
   },
   {
     id: "cosmos",
@@ -66,6 +72,7 @@ export const themes: Theme[] = [
     secondaryAccent: "0F172A",
     fontPair: { heading: "Space Grotesk", body: "Inter" },
     layoutType: "bold",
+    categories: ["dark", "creative"],
     gradient: { from: "020617", to: "1E1B4B", mid: "0F172A", angle: 160 },
   },
   {
@@ -79,6 +86,7 @@ export const themes: Theme[] = [
     secondaryAccent: "FEF3C7",
     fontPair: { heading: "Playfair Display", body: "Source Serif Pro" },
     layoutType: "editorial",
+    categories: ["light", "creative"],
   },
   {
     id: "neon",
@@ -91,6 +99,7 @@ export const themes: Theme[] = [
     secondaryAccent: "18181B",
     fontPair: { heading: "Space Grotesk", body: "Inter" },
     layoutType: "tech",
+    categories: ["dark", "creative"],
     gradient: { from: "09090B", to: "3B0764", angle: 145 },
   },
   {
@@ -104,6 +113,7 @@ export const themes: Theme[] = [
     secondaryAccent: "ECFCCB",
     fontPair: { heading: "DM Serif Display", body: "DM Sans" },
     layoutType: "split",
+    categories: ["light", "creative"],
   },
   {
     id: "ocean",
@@ -116,6 +126,7 @@ export const themes: Theme[] = [
     secondaryAccent: "172554",
     fontPair: { heading: "Outfit", body: "Inter" },
     layoutType: "bold",
+    categories: ["dark", "professional"],
     gradient: { from: "0C1222", to: "1E3A5F", angle: 180 },
   },
   {
@@ -129,6 +140,7 @@ export const themes: Theme[] = [
     secondaryAccent: "FFE4E6",
     fontPair: { heading: "Playfair Display", body: "Lato" },
     layoutType: "editorial",
+    categories: ["light", "creative"],
   },
   {
     id: "carbon",
@@ -141,6 +153,59 @@ export const themes: Theme[] = [
     secondaryAccent: "27272A",
     fontPair: { heading: "JetBrains Mono", body: "Inter" },
     layoutType: "tech",
+    categories: ["dark", "professional"],
     gradient: { from: "18181B", to: "09090B", angle: 180 },
+  },
+  {
+    id: "zenith",
+    name: "Zenith",
+    tag: "Minimalist · Pure",
+    background: "FFFFFF",
+    titleColor: "000000",
+    contentColor: "404040",
+    accentColor: "000000",
+    secondaryAccent: "F5F5F5",
+    fontPair: { heading: "Inter", body: "Inter" },
+    layoutType: "clean",
+    categories: ["light", "professional"],
+  },
+  {
+    id: "vanguard",
+    name: "Vanguard",
+    tag: "Professional · Bold",
+    background: "0F172A",
+    titleColor: "FFFFFF",
+    contentColor: "94A3B8",
+    accentColor: "F59E0B",
+    secondaryAccent: "1E293B",
+    fontPair: { heading: "Outfit", body: "Inter" },
+    layoutType: "bold",
+    categories: ["dark", "professional"],
+  },
+  {
+    id: "graphite",
+    name: "Graphite",
+    tag: "Tech · Matte",
+    background: "18181B",
+    titleColor: "FFFFFF",
+    contentColor: "A1A1AA",
+    accentColor: "6366F1",
+    secondaryAccent: "27272A",
+    fontPair: { heading: "DM Sans", body: "Inter" },
+    layoutType: "tech",
+    categories: ["dark", "professional"],
+  },
+  {
+    id: "ivory",
+    name: "Ivory",
+    tag: "Clean · Soft",
+    background: "FFFFFF",
+    titleColor: "171717",
+    contentColor: "525252",
+    accentColor: "10B981",
+    secondaryAccent: "F0FDF4",
+    fontPair: { heading: "Outfit", body: "Outfit" },
+    layoutType: "split",
+    categories: ["light", "professional"],
   },
 ];

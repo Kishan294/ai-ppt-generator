@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { downloadPPT } from "@/lib/ppt-generator";
-import { themes, type Theme } from "@/lib/themes";
+import { themes, type Theme, type ThemeCategory } from "@/lib/themes";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -37,20 +37,6 @@ const getGradStyle = (t: Theme): React.CSSProperties =>
       }
     : { backgroundColor: `#${t.background}` };
 
-/* ─── animation variants ─── */
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.06,
-      duration: 0.5,
-      ease: "easeOut" as const,
-    },
-  }),
-};
-
 export default function GeneratePage() {
   const router = useRouter();
   const [topic, setTopic] = useState("");
@@ -60,7 +46,13 @@ export default function GeneratePage() {
   const [pptData, setPptData] = useState<PPTData | null>(null);
   const [theme, setTheme] = useState<Theme>(themes[0]);
   const [signingOut, setSigningOut] = useState(false);
+  const [filter, setFilter] = useState<ThemeCategory | "all">("all");
   const previewRef = useRef<HTMLDivElement>(null);
+
+  const filteredThemes =
+    filter === "all"
+      ? themes
+      : themes.filter((t) => t.categories.includes(filter as ThemeCategory));
 
   /* ── sign out ── */
   const handleSignOut = async () => {
@@ -407,151 +399,183 @@ export default function GeneratePage() {
 
         {/* ━━━━━ THEME PICKER ━━━━━ */}
         <section className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold">Visual Styles</h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Choose a theme — the preview updates instantly.
-            </p>
-          </div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Visual Styles</h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                Choose a theme — the preview updates instantly.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {themes.map((t, i) => {
-              const selected = theme.id === t.id;
-              return (
-                <motion.button
-                  key={t.id}
-                  variants={fadeUp}
-                  initial="hidden"
-                  animate="show"
-                  custom={i}
-                  onClick={() => setTheme(t)}
+            {/* Filter Buttons */}
+            <div className="flex flex-wrap items-center gap-1.5 rounded-full border border-zinc-800 bg-zinc-900/40 p-1 backdrop-blur">
+              {["all", "dark", "light", "professional", "creative"].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f as ThemeCategory | "all")}
                   className={cn(
-                    "group relative flex flex-col overflow-hidden rounded-xl border transition-all duration-200",
-                    selected
-                      ? "border-indigo-500 ring-2 ring-indigo-500/30"
-                      : "border-zinc-800 hover:border-zinc-700",
+                    "rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-all capitalize",
+                    filter === f
+                      ? "bg-zinc-100 text-zinc-900"
+                      : "text-zinc-500 hover:text-zinc-300",
                   )}
                 >
-                  {/* swatch */}
-                  <div
-                    className="relative aspect-video overflow-hidden"
-                    style={getGradStyle(t)}
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <motion.div
+            layout
+            className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredThemes.map((t) => {
+                const selected = theme.id === t.id;
+                return (
+                  <motion.button
+                    key={t.id}
+                    layout="position"
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{
+                      layout: { type: "spring", stiffness: 500, damping: 40 },
+                      opacity: { duration: 0.2 },
+                      scale: { duration: 0.2 },
+                    }}
+                    onClick={() => setTheme(t)}
+                    className={cn(
+                      "group relative flex flex-col overflow-hidden rounded-xl border",
+                      selected
+                        ? "border-indigo-500 ring-2 ring-indigo-500/30"
+                        : "border-zinc-800 hover:border-zinc-700",
+                    )}
                   >
-                    {/* mini slide mockup */}
-                    <div className="absolute inset-0 flex flex-col justify-between p-3">
-                      <div className="space-y-1">
+                    {/* swatch */}
+                    <div
+                      className="relative aspect-video overflow-hidden"
+                      style={getGradStyle(t)}
+                    >
+                      {/* mini slide mockup */}
+                      <div className="absolute inset-0 flex flex-col justify-between p-3">
+                        <div className="space-y-1">
+                          <div
+                            className="h-2 w-14 rounded-full"
+                            style={{
+                              backgroundColor: `#${t.titleColor}`,
+                              opacity: 0.7,
+                            }}
+                          />
+                          <div
+                            className="h-1 w-8 rounded-full"
+                            style={{
+                              backgroundColor: `#${t.accentColor}`,
+                              opacity: 0.5,
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-[3px]">
+                          <div
+                            className="h-[3px] w-12 rounded-full"
+                            style={{
+                              backgroundColor: `#${t.contentColor}`,
+                              opacity: 0.35,
+                            }}
+                          />
+                          <div
+                            className="h-[3px] w-9 rounded-full"
+                            style={{
+                              backgroundColor: `#${t.contentColor}`,
+                              opacity: 0.25,
+                            }}
+                          />
+                          <div
+                            className="h-[3px] w-6 rounded-full"
+                            style={{
+                              backgroundColor: `#${t.contentColor}`,
+                              opacity: 0.2,
+                            }}
+                          />
+                        </div>
+                      </div>
+                      {/* layout-specific mockup details */}
+                      {t.layoutType === "split" && (
                         <div
-                          className="h-2 w-14 rounded-full"
+                          className="absolute bottom-0 left-0 top-0 w-[28%]"
                           style={{
-                            backgroundColor: `#${t.titleColor}`,
-                            opacity: 0.7,
-                          }}
-                        />
-                        <div
-                          className="h-1 w-8 rounded-full"
-                          style={{
-                            backgroundColor: `#${t.accentColor}`,
+                            backgroundColor: `#${t.secondaryAccent}`,
                             opacity: 0.5,
                           }}
                         />
-                      </div>
-                      <div className="space-y-[3px]">
+                      )}
+                      {t.layoutType === "editorial" && (
                         <div
-                          className="h-[3px] w-12 rounded-full"
+                          className="absolute left-3 right-3 top-[20%] h-px"
                           style={{
-                            backgroundColor: `#${t.contentColor}`,
-                            opacity: 0.35,
+                            backgroundColor: `#${t.accentColor}`,
+                            opacity: 0.4,
                           }}
                         />
+                      )}
+                      {t.layoutType === "tech" && (
                         <div
-                          className="h-[3px] w-9 rounded-full"
+                          className="absolute left-0 right-0 top-0 h-[4px]"
                           style={{
-                            backgroundColor: `#${t.contentColor}`,
-                            opacity: 0.25,
+                            backgroundColor: `#${t.accentColor}`,
+                            opacity: 0.7,
                           }}
                         />
+                      )}
+                      {t.layoutType === "bold" && (
                         <div
-                          className="h-[3px] w-6 rounded-full"
+                          className="absolute left-0 top-0 bottom-0 w-[4px]"
                           style={{
-                            backgroundColor: `#${t.contentColor}`,
-                            opacity: 0.2,
+                            backgroundColor: `#${t.accentColor}`,
+                            opacity: 0.8,
                           }}
                         />
+                      )}
+                    </div>
+                    {/* info */}
+                    <div className="bg-zinc-900/80 px-3 py-2.5 text-left">
+                      <p className="text-xs font-semibold text-zinc-200">
+                        {t.name}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-zinc-500">
+                        {t.tag}
+                      </p>
+                      {/* color dots */}
+                      <div className="mt-1.5 flex gap-1">
+                        {[
+                          t.accentColor,
+                          t.titleColor,
+                          t.contentColor,
+                          t.secondaryAccent,
+                        ].map((c, ci) => (
+                          <span
+                            key={ci}
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: `#${c}` }}
+                          />
+                        ))}
                       </div>
                     </div>
-                    {/* layout-specific mockup details */}
-                    {t.layoutType === "split" && (
-                      <div
-                        className="absolute bottom-0 left-0 top-0 w-[28%]"
-                        style={{
-                          backgroundColor: `#${t.secondaryAccent}`,
-                          opacity: 0.5,
-                        }}
-                      />
+                    {/* selected mark */}
+                    {selected && (
+                      <motion.div
+                        layoutId="sel"
+                        className="absolute right-2 top-2 rounded-full bg-indigo-500 p-1 shadow-lg shadow-indigo-500/40"
+                      >
+                        <Check className="h-2.5 w-2.5 text-white" />
+                      </motion.div>
                     )}
-                    {t.layoutType === "editorial" && (
-                      <div
-                        className="absolute left-3 right-3 top-[20%] h-px"
-                        style={{
-                          backgroundColor: `#${t.accentColor}`,
-                          opacity: 0.4,
-                        }}
-                      />
-                    )}
-                    {t.layoutType === "tech" && (
-                      <div
-                        className="absolute left-0 right-0 top-0 h-[4px]"
-                        style={{
-                          backgroundColor: `#${t.accentColor}`,
-                          opacity: 0.7,
-                        }}
-                      />
-                    )}
-                    {t.layoutType === "bold" && (
-                      <div
-                        className="absolute left-0 top-0 bottom-0 w-[4px]"
-                        style={{
-                          backgroundColor: `#${t.accentColor}`,
-                          opacity: 0.8,
-                        }}
-                      />
-                    )}
-                  </div>
-                  {/* info */}
-                  <div className="bg-zinc-900/80 px-3 py-2.5 text-left">
-                    <p className="text-xs font-semibold text-zinc-200">
-                      {t.name}
-                    </p>
-                    <p className="mt-0.5 text-[10px] text-zinc-500">{t.tag}</p>
-                    {/* color dots */}
-                    <div className="mt-1.5 flex gap-1">
-                      {[
-                        t.accentColor,
-                        t.titleColor,
-                        t.contentColor,
-                        t.secondaryAccent,
-                      ].map((c, ci) => (
-                        <span
-                          key={ci}
-                          className="h-2 w-2 rounded-full"
-                          style={{ backgroundColor: `#${c}` }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  {/* selected mark */}
-                  {selected && (
-                    <motion.div
-                      layoutId="sel"
-                      className="absolute right-2 top-2 rounded-full bg-indigo-500 p-1 shadow-lg shadow-indigo-500/40"
-                    >
-                      <Check className="h-2.5 w-2.5 text-white" />
-                    </motion.div>
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
+                  </motion.button>
+                );
+              })}
+            </AnimatePresence>
+          </motion.div>
         </section>
 
         {/* ━━━━━ LIVE PREVIEW ━━━━━ */}
