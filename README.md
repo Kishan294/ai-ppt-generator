@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VoraDeck - AI-Powered Presentation Generator
 
-## Getting Started
+VoraDeck is a modern, high-performance web application that leverages artificial intelligence to transform your ideas, documents, or prompts into professional-grade presentations in seconds.
 
-First, run the development server:
+## 🚀 Features
+
+- **AI Generation**: Powered by Google Gemini and Groq for high-quality content structuring.
+- **Instant PPTX Export**: Generate and download presentations in standard PowerPoint format.
+- **Modern UI/UX**: Built with React 19, Next.js 16, and Framer Motion for a fluid, premium experience.
+- **Secure Authentication**: Integrated with Better Auth for robust user management.
+- **Real-time Database**: Uses Neon (PostgreSQL) with Drizzle ORM for efficient data handling.
+- **Turbopack Optimized**: Blazing fast development builds using Next.js Turbopack.
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 16+](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **AI SDK**: [Vercel AI SDK](https://sdk.vercel.ai/)
+- **Database**: [Neon](https://neon.tech/) & [Drizzle ORM](https://orm.drizzle.team/)
+- **Auth**: [Better Auth](https://www.better-auth.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+
+## 🏁 Getting Started
+
+### Prerequisites
+
+- Node.js installed
+- PNPM installed (`npm install -g pnpm`)
+- Database URL (Neon/PostgreSQL)
+- API Keys for Gemini and Groq
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone <repository-url>
+   cd 03_PPT_Generator
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   pnpm install
+   ```
+
+3. Set up environment variables:
+   Create a `.env` file in the root directory and add the following:
+
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key
+   GROQ_API_KEY=your_groq_api_key
+   DATABASE_URL=your_database_url
+   BETTER_AUTH_SECRET=your_auth_secret
+   BETTER_AUTH_URL=http://localhost:3000
+   NEXT_PUBLIC_BASE_URL=http://localhost:3000
+   ```
+
+4. Push the database schema:
+
+   ```bash
+   pnpm push
+   ```
+
+5. Run the development server:
+   ```bash
+   pnpm dev
+   ```
+
+## 🔧 Troubleshooting
+
+### Benchmark I/O Error
+
+If you encounter the error: `Failed to benchmark file I/O: The system cannot find the path specified. (os error 3)`, it is likely due to Turbopack trying to run disk benchmarks on a restricted or non-existent path.
+
+**Solution:**
+You can bypass the benchmarks by setting an environment variable:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+$env:TURBO_ENGINE_DISABLE_BENCHMARKS=1; pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Alternatively, clear the `.next` directory:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+rm -rf .next
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📄 License
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Individual work for specialized presentation generation.
