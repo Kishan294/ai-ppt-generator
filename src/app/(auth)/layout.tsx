@@ -26,7 +26,7 @@ export default function AuthLayout({
               <Sparkles className="h-6 w-6 text-black" />
             </div>
             <span className="text-xl font-bold tracking-tight text-white">
-              Studio<span className="text-zinc-500">.ai</span>
+              Vora<span className="text-zinc-500">Deck</span>
             </span>
           </Link>
         </div>
@@ -104,7 +104,7 @@ export default function AuthLayout({
               <Sparkles className="h-5 w-5 text-black" />
             </div>
             <span className="text-lg font-bold tracking-tight text-white">
-              Studio<span className="text-zinc-500">.ai</span>
+              Vora<span className="text-zinc-500">Deck</span>
             </span>
           </Link>
         </div>

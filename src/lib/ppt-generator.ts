@@ -14,7 +14,7 @@ export interface PPTData {
 export const downloadPPT = async (data: PPTData, theme: Theme) => {
   const pptx = new pptxgen();
   pptx.layout = "LAYOUT_16x9";
-  pptx.author = "Studio.ai";
+  pptx.author = "VoraDeck";
   pptx.title = data.title;
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -82,7 +82,7 @@ export const downloadPPT = async (data: PPTData, theme: Theme) => {
   // Subtitle tag
   const tagX = theme.layoutType === "split" ? 4 : 1;
   const tagW = theme.layoutType === "split" ? 5.5 : 8;
-  titleSlide.addText("A PRESENTATION BY STUDIO.AI", {
+  titleSlide.addText("A PRESENTATION BY VORADECK", {
     x: tagX,
     y: 1.5,
     w: tagW,
@@ -371,7 +371,7 @@ export const downloadPPT = async (data: PPTData, theme: Theme) => {
     fontFace: theme.fontPair.body,
   });
 
-  endSlide.addText("Created with Studio.ai", {
+  endSlide.addText("Created with VoraDeck", {
     x: 2,
     y: 4.5,
     w: 6,

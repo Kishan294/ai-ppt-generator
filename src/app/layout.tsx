@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Studio.ai | Next-Gen AI Presentation Studio",
+  title: "VoraDeck | Next-Gen AI Presentation Studio",
   description:
     "Transform your ideas into stunning visual narratives with the world's most advanced AI presentation tool.",
 };

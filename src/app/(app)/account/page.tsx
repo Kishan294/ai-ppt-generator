@@ -72,7 +72,7 @@ export default function AccountPage() {
             <Sparkles className="h-5 w-5 text-black" />
           </div>
           <span className="text-lg font-semibold tracking-tight">
-            Studio<span className="text-zinc-500">.ai</span>
+            Vora<span className="text-zinc-500">Deck</span>
           </span>
         </div>
       </nav>

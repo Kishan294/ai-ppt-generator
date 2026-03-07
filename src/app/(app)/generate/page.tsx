@@ -266,7 +266,7 @@ export default function GeneratePage() {
             <Sparkles className="h-5 w-5 text-black" />
           </div>
           <span className="text-lg font-semibold tracking-tight">
-            Studio<span className="text-zinc-500">.ai</span>
+            Vora<span className="text-zinc-500">Deck</span>
           </span>
         </motion.div>
 
@@ -798,7 +798,7 @@ export default function GeneratePage() {
                       className="text-[9px] font-bold uppercase tracking-[0.35em]"
                       style={{ color: `#${theme.accentColor}` }}
                     >
-                      A Presentation by Studio.ai
+                      A Presentation by VoraDeck
                     </span>
                     {isEditing ? (
                       <textarea
@@ -1098,7 +1098,7 @@ export default function GeneratePage() {
       {/* ━━ footer ━━ */}
       <footer className="relative z-10 border-t border-zinc-900 bg-zinc-950/80 px-6 py-8 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <p className="text-xs text-zinc-600">© 2026 Studio.ai</p>
+          <p className="text-xs text-zinc-600">© 2026 VoraDeck</p>
           <div className="flex gap-5">
             {["Twitter", "GitHub", "Discord"].map((s) => (
               <a

@@ -63,7 +63,7 @@ export default function PresentationViewer({
               <Sparkles className="h-5 w-5 text-black" />
             </div>
             <span className="text-lg font-semibold tracking-tight">
-              Studio<span className="text-zinc-500">.ai</span>
+              Vora<span className="text-zinc-500">Deck</span>
             </span>
           </div>
         </div>
@@ -106,7 +106,7 @@ export default function PresentationViewer({
                   className="text-[10px] font-bold uppercase tracking-[0.45em]"
                   style={{ color: `#${theme.accentColor}` }}
                 >
-                  A Presentation by Studio.ai
+                  A Presentation by VoraDeck
                 </span>
                 <h2
                   className="max-w-[90%] text-4xl font-bold uppercase leading-tight tracking-tight md:text-5xl"
@@ -218,7 +218,7 @@ export default function PresentationViewer({
                       className="text-[8px] font-bold uppercase tracking-widest"
                       style={{ color: `#${theme.contentColor}` }}
                     >
-                      Created with Studio.ai
+                      Created with VoraDeck
                     </span>
                     <span
                       className="text-[8px] font-bold"

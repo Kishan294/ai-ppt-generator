@@ -79,7 +79,7 @@ export default function SignInPage() {
             Welcome back
           </CardTitle>
           <CardDescription className="text-zinc-400">
-            Sign in to your Studio.ai account to continue
+            Sign in to your VoraDeck account to continue
           </CardDescription>
         </CardHeader>
 

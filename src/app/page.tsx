@@ -33,7 +33,7 @@ export default async function LandingPage() {
             <Sparkles className="h-5 w-5 text-black" />
           </div>
           <span className="text-lg font-semibold tracking-tight">
-            Studio<span className="text-zinc-500">.ai</span>
+            Vora<span className="text-zinc-500">Deck</span>
           </span>
         </div>
 
@@ -118,7 +118,7 @@ export default async function LandingPage() {
                 </div>
                 <div className="flex-1 text-center">
                   <span className="text-[11px] text-zinc-600">
-                    studio.ai/generate
+                    voradeck.com/generate
                   </span>
                 </div>
               </div>
@@ -278,7 +278,7 @@ export default async function LandingPage() {
                 ?
               </h2>
               <p className="mx-auto max-w-md text-zinc-400">
-                Join thousands of professionals who use Studio.ai to create
+                Join thousands of professionals who use VoraDeck to create
                 stunning presentations in seconds.
               </p>
               <Link href={isAuthenticated ? "/generate" : "/sign-up"}>
@@ -296,7 +296,7 @@ export default async function LandingPage() {
       {/* ━━ footer ━━ */}
       <footer className="relative z-10 border-t border-zinc-900 bg-zinc-950/80 px-6 py-8 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <p className="text-xs text-zinc-600">© 2026 Studio.ai</p>
+          <p className="text-xs text-zinc-600">© 2026 VoraDeck</p>
           <div className="flex gap-5">
             {["Twitter", "GitHub", "Discord"].map((s) => (
               <a
